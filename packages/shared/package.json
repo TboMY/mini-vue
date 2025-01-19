@@ -1,0 +1,15 @@
+{
+  "name": "@mini-vue/shared",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "module": "dist/shared.esm-bundler.js",
+  "buildOptions": {
+    "formats": [
+      "esm-bundler",
+      "cjs"
+    ]
+  },
+  "scripts": {
+  }
+}

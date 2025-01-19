@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+
+<script type="module">
+  import { reactive } from './index.ts'
+
+  const obj = {
+    n: 1
+  }
+
+  const state1 = reactive(obj)
+  console.log(state1.n)
+  const state2 = reactive(obj)
+  console.log(state1 === state2)
+
+  const reactive1 = reactive(state1)
+  console.log(reactive1===state1)
+
+
+</script>
+</html>
