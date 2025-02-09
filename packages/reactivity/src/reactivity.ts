@@ -4,7 +4,7 @@
  *
  */
 
-import {isObject} from '@mini-vue/shared/src/index'
+import {isObject} from '@mini-vue/shared'
 import {ReactivityFlags} from "./constant";
 import {executeTrackEffect, track, trigger} from "./reactiveEffect";
 

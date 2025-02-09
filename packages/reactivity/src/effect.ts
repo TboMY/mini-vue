@@ -47,12 +47,13 @@ export class ReactivityEffect {
             try {
                 // 在proxy中的handler中用到
                 activeEffect = this
-                preCleanEffectDeps(this, this._deps[this._depsLength])
+                preCleanEffectDeps(this)
                 this.fn()
             } finally {
                 // 当且仅当, 由effect中的回调函数引起代理的触发,才能够在handler中,用到_effect;
                 // 由其他地方引起的proxy的handler触发,不能用到_effect
                 activeEffect = lastActiveEffect //应对effect嵌套的时候,(其实就是一个栈,内层的effect回调执行后,触发handler之后,finally要回到外层的activeEffect去)
+                postCleanEffect(this)
             }
         }
     }
@@ -60,7 +61,7 @@ export class ReactivityEffect {
 
 // 每次重新执行effect()内的回调函数之前, 先清理之前的state,
 // 因为回调函数内对state的访问可能变了,(比如三目运算, || &&等)
-function preCleanEffectDeps(_effect: ReactivityEffect, keyDepsMap: Map<ReactivityEffect, number>) {
+function preCleanEffectDeps(_effect: ReactivityEffect) {
     _effect._trackId++;
     _effect._depsLength = 0;
 }
@@ -74,6 +75,21 @@ function cleanKeyDepsEffect(keyDepsMap: Map<ReactivityEffect, number>, _effect: 
     }
 }
 
+// 回调函数中依赖的reactive的数量变少了, 删除多余的
+// 比如 {flag, name, age} => {flag}; 就要将name,age这两个删除
+function postCleanEffect(_effect: ReactivityEffect) {
+    const depsLength = _effect._depsLength;
+    const deps = _effect._deps;
+    if (depsLength <= deps.length) return
+
+    for (let i = depsLength; i < deps.length; i++) {
+        const keyDepsMap = deps[i];
+        keyDepsMap.delete(_effect)
+    }
+    // 让deps回到正确长度
+    deps.length = depsLength
+}
+
 export function createRealDeps(_effect: ReactivityEffect, keyDepsMap: Map<ReactivityEffect, number>) {
     // 这个map是state.key对应的map, 该map中每个key表示一个_effect对象,其value表示一个_trackId
     /*
@@ -85,6 +101,7 @@ export function createRealDeps(_effect: ReactivityEffect, keyDepsMap: Map<Reacti
        }
      */
 
+    // 每个effect的回调run一次_trackId才会自增一次
     // 并且要防止多次访问一个state时,重复收集
     if (keyDepsMap.get(_effect) !== _effect._trackId) {
         keyDepsMap.set(_effect, _effect._trackId)
@@ -103,7 +120,7 @@ export function createRealDeps(_effect: ReactivityEffect, keyDepsMap: Map<Reacti
 
             // 双向,各自保存一份依赖
             // 一个_effect关联了哪些state
-            console.log('_effect.deps中添加元素: ',keyDepsMap)
+            console.log('_effect.deps中添加元素: ', keyDepsMap)
             _effect._deps[_effect._depsLength++] = keyDepsMap
         } else {
             _effect._depsLength++

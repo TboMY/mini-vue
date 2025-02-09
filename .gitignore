@@ -2,3 +2,4 @@ node_modules/
 dist/
 /packages/reactivity/node_modules/
 /packages/reactivity/dist/
+pnpm-lock.yaml

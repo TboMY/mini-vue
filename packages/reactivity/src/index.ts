@@ -4,5 +4,5 @@
  *
  */
 
-export * from './effect.ts'
-export * from './reactivity.ts'
+export * from './effect'
+export * from './reactivity'
