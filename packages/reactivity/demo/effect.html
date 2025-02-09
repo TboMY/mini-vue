@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>effect测试</title>
+</head>
+<body>
+
+</body>
+
+<script type="module">
+  import { reactive, effect } from '../dist/reactivity.js'
+
+  const person = {
+    name: 'cj',
+    age: 81,
+    timer: Date.now(),
+    flag: true
+  }
+
+  const state = reactive(person)
+
+  effect(() => {
+    console.log('%c effect的回调执行了', 'color:green;')
+    // document.body.innerHTML = `name:${ state.name } age:${ state.age }`
+    document.body.innerHTML = state.flag ? `name:${ state.name }` : `age:${ state.age }`
+  })
+
+  // setInterval(() => state.age=81, 1000)
+  // setInterval(() => state.timer++, 1000)
+  // setTimeout(() => state.age++, 1000)
+
+  state.flag = false
+  setTimeout(() => state.name = 'state.name已经没有依赖但是改变了', 1000)
+  // setTimeout(() => state.age = 999, 1000)
+
+
+</script>
+</html>

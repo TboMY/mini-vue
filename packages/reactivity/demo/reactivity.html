@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>reactivity测试</title>
+</head>
+<body>
+
+</body>
+
+<script type="module">
+  import { reactive } from '../dist/reactivity.js'
+
+  const obj = {
+    n: 1
+  }
+
+  const state1 = reactive(obj)
+  console.log(state1.n)
+  const state2 = reactive(obj)
+  console.log(state1 === state2)
+
+  const state3 = reactive(state1)
+  console.log(state3===state1)
+
+
+</script>
+</html>

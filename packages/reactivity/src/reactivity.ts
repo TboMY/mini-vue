@@ -4,23 +4,33 @@
  *
  */
 
-import {isObject} from '@mini-vue/shared/src/index.ts'
+import {isObject} from '@mini-vue/shared/src/index'
 import {ReactivityFlags} from "./constant";
-import {effect} from "./effect";
+import {executeTrackEffect, track, trigger} from "./reactiveEffect";
 
-// 弱引用,防止内存泄漏
-const reactivityMemo = new WeakMap<object, any>()
+// 缓存已经reactive过的object, 弱引用,防止内存泄漏
+const reactivityMemo = new WeakMap<object, ProxyConstructor>()
 
 // 代理对象的handlers
 const proxyHandlers = {
-    get(target: any, p: string | symbol, receiver: any): any {
-        if (p === ReactivityFlags.IS_REACTED) {
+    get(target: any, key: string | symbol, receiver: any): any {
+        if (key === ReactivityFlags.IS_REACTED) {
             return true
         }
-        return Reflect.get(...arguments)
+        track(target, key)
+        return Reflect.get(target, key, receiver)
     },
-    set(target: any, p: string | symbol, newValue: any, receiver: any): boolean {
-        effect()
+    set(target: any, key: string | symbol, newValue: any, receiver: any): boolean {
+        const oldValue = target[key]
+        Reflect.set(target, key, newValue, receiver)
+        if (Object.is(newValue, oldValue)) {
+            return
+        }
+
+        // 执行追踪的_effect的调度函数
+        trigger(target, key, newValue, oldValue)
+
+        // executeTrackEffect(target, key)
         return true
     }
 }

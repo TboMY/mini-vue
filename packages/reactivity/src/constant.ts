@@ -4,6 +4,6 @@
  *
  */
 
-export enum ReactivityFlags {
-    IS_REACTED = Symbol('__v_is_reacted')
+export const ReactivityFlags = {
+    IS_REACTED: Symbol('__v_is_reacted')
 }
