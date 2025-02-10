@@ -6,7 +6,7 @@
 
 import {isObject} from '@mini-vue/shared'
 import {ReactivityFlags} from "./constant";
-import {executeTrackEffect, track, trigger} from "./reactiveEffect";
+import {track, trigger} from "./reactiveEffect";
 
 // 缓存已经reactive过的object, 弱引用,防止内存泄漏
 const reactivityMemo = new WeakMap<object, ProxyConstructor>()
@@ -17,20 +17,26 @@ const proxyHandlers = {
         if (key === ReactivityFlags.IS_REACTED) {
             return true
         }
+        console.log('getHandlers,key= ', key)
         track(target, key)
-        return Reflect.get(target, key, receiver)
+
+        // 递归代理, 懒代理
+        // 并且reactive中有缓存, 性能不会有问题
+        const res = Reflect.get(target, key, receiver);
+        if (isObject(res)) {
+            return reactive(res)
+        }
+        return res
     },
     set(target: any, key: string | symbol, newValue: any, receiver: any): boolean {
         const oldValue = target[key]
         Reflect.set(target, key, newValue, receiver)
         if (Object.is(newValue, oldValue)) {
-            return
+            return true
         }
 
         // 执行追踪的_effect的调度函数
         trigger(target, key, newValue, oldValue)
-
-        // executeTrackEffect(target, key)
         return true
     }
 }

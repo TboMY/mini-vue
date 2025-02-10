@@ -38,6 +38,9 @@ export class ReactivityEffect {
     // 用来遍历_deps中的state
     public _depsLength = 0
 
+    // 不为0时,表示effect正在执行中, 防止像react的useEffect中,死循环
+    _running = 0
+
 
     /**
      *
@@ -57,8 +60,10 @@ export class ReactivityEffect {
                 // 在proxy中的handler中用到
                 activeEffect = this
                 preCleanEffectDeps(this)
+                this._running++
                 this.fn()
             } finally {
+                this._running--
                 // 当且仅当, 由effect中的回调函数引起代理的触发,才能够在handler中,用到_effect;
                 // 由其他地方引起的proxy的handler触发,不能用到_effect
                 activeEffect = lastActiveEffect //应对effect嵌套的时候,(其实就是一个栈,内层的effect回调执行后,触发handler之后,finally要回到外层的activeEffect去)

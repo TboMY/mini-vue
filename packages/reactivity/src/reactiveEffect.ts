@@ -68,6 +68,8 @@ export function executeTrackEffect(target: object, key: symbol | string) {
     if (!keyDepsMap) return;
 
     keyDepsMap.entries().forEach(([_effect, v]) => {
+        // 表示effect的回调执行过了
+        if (_effect._running) return
         // 执行调度函数
         _effect?.scheduler?.()
     })

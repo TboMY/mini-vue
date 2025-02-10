@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+</body>
+
+<script type="module">
+
+  import { reactive, effect } from '../../dist/reactivity.js'
+
+  const person = reactive({
+    name: 'yyr',
+    age: 18,
+    boyFriend: {
+      name: 'joker',
+      age: 18
+    }
+  })
+
+  const runner = effect(() => {
+    document.body.innerHTML = `${ person.boyFriend.name }---${ person.age }`
+
+    // 在回调中修改reactive数据
+    person.age='hcx'
+  })
+
+  // 模拟修改reactive数据
+  setTimeout(() => {
+    person.boyFriend.name = 'cj'
+  }, 1000)
+
+
+</script>
+</html>
