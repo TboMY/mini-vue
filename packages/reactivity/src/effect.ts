@@ -13,6 +13,15 @@ export function effect(callback: Function, options?: any) {
     })
     // 第一次执行一次
     _effect.run()
+
+    // 用户自定义的调度函数,在reactive发生变化后,可能不需要立即渲染ui,或者可以待会用户自己渲染ui(会提供给用户)
+    // aop的思想
+    if (options) {
+        Object.assign(_effect, options)
+    }
+    const runner = _effect.run.bind(_effect)
+    runner.effect = _effect
+    return runner
 }
 
 export class ReactivityEffect {
