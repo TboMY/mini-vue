@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+
+<script type="module">
+
+  import { reactive, ref, toRefs, toRef, proxyRefs, effect } from '../../dist/reactivity.js'
+
+  const person = reactive({
+    key: 'cxk',
+    name: '张三',
+    age: 18
+  })
+
+  const keyRef = toRef(person, 'key')
+  const { name, age } = toRefs(person)
+
+  const proxyRef = proxyRefs({
+    name, age, key: keyRef
+  })
+
+  effect(() => {
+    const text1 = `keyRef: ${ keyRef.value } <br> nameRef:${ name.value } <br> ageRef:${ age.value } `
+    const text2 = ` <br><br>
+                        keyRef: ${ proxyRef.key } <br> nameRef:${ proxyRef.name } <br> ageRef:${ proxyRef.age } `
+    document.body.innerHTML = text1 + text2
+  })
+
+  setTimeout(() => {
+    keyRef.value = '蔡徐坤'
+    name.value = '李四'
+    age.value = 1314
+    console.log('数据源是否改变: ', person)
+  }, 1000)
+
+  setTimeout(() => {
+    proxyRef.key = '姬霓太美'
+    proxyRef.name = '我嘞个扫刚'
+    proxyRef.age = 9999
+    console.log('keyRef数据是否改变: ', keyRef)
+    console.log('nameRef数据是否改变: ', name)
+    console.log('ageRef数据是否改变: ', age)
+  }, 3000)
+
+
+</script>
+</html>

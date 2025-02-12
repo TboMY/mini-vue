@@ -38,7 +38,7 @@ export class ReactivityEffect {
     // 用来遍历_deps中的state
     public _depsLength = 0
 
-    // 不为0时,表示effect正在执行中, 防止像react的useEffect中,死循环
+    // 不为0时,表示effect正在执行中, 防止在effect中既访问又修改reactive属性的值时,导致像react的useEffect中,栈溢出
     _running = 0
 
 
@@ -126,7 +126,7 @@ export function trackEffect(_effect: ReactivityEffect, deps: Map<ReactivityEffec
          */
         const oldValue = _effect._deps[_effect._depsLength];
         if (oldValue !== deps) {
-            // 如果是undefined是新增,不然的话
+            // 如果oldValue是undefined是新增,不然的话
             // 说明遍历过来, 老的和旧的已经对应不上了, 要删除keyDepsMap中的这个_effect
             if (oldValue) {
                 cleanDepsEffect(deps, _effect)

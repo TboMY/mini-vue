@@ -10,8 +10,8 @@ import {activeEffect, trackEffect, ReactivityEffect} from "./effect";
 // {
 //     targetObj1:{
 //         // 这里原本用的一个set,3.4后变成map了, 因为要用_trackId
-// 用Map不用Set是有其他原因的:
-// todo: 原因:
+// 用Map不用Set,
+// 因为_trackId后需要用来防止effect回调多次访问reactive同一个属性,导致_effect中多次收集同一个keyDepsMap
 //         prop1:{
 //             effect1: _trackId,
 //             effect2: _trackId
