@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script type="module">
+
+  import { ref, effect } from '../../dist/reactivity.js'
+
+  const count = ref(0)
+  const obj = ref({
+    name: 'cj'
+  })
+
+  console.log(count.value)
+  console.log(obj.value)
+
+  effect(() => {
+    document.body.innerHTML = `${ count.value } <br> ${ obj.value.name }`
+  })
+
+  setTimeout(() => count.value++, 1000)
+  setTimeout(() => obj.value = {}, 2000)
+  setTimeout(() => obj.value = { name: 'yyr' }, 3000)
+
+</script>
+</html>

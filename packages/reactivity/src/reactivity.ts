@@ -65,3 +65,7 @@ function createReactiveObject(target) {
     reactivityMemo.set(target, reactivity)
     return reactivity
 }
+
+export function toReactive(target: any) {
+    return createReactiveObject(target)
+}

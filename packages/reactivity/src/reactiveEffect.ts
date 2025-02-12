@@ -3,7 +3,7 @@
  * @Date: 2025/1/22 01:03
  * 用于收集reactive和effect的依赖关系
  */
-import {activeEffect, createRealDeps, ReactivityEffect} from "./effect";
+import {activeEffect, trackEffect, ReactivityEffect} from "./effect";
 
 // 用来收集依赖关系
 // 要形成这样的数据结构:
@@ -51,22 +51,21 @@ export function track(target: object, key: string | symbol) {
     }
 
     // 真正建立effect和state的关系
-    createRealDeps(activeEffect, keyDepsMap)
+    trackEffect(activeEffect, keyDepsMap)
 }
 
 
 export function trigger(target: object, key: string | symbol, newValue: any, oldValue: any) {
-    executeTrackEffect(target, key)
-}
-
-// 当handler中的set执行,要执行一遍依赖了该state的effect的run
-export function executeTrackEffect(target: object, key: symbol | string) {
     const depTarget = effectDeps.get(target);
     if (!depTarget) return;
 
     const keyDepsMap = depTarget.get(key);
     if (!keyDepsMap) return;
+    executeTrackEffect(keyDepsMap)
+}
 
+// 当handler中的set执行,要执行一遍依赖了该state的effect的run
+export function executeTrackEffect(keyDepsMap: Map<ReactivityEffect, number>) {
     keyDepsMap.entries().forEach(([_effect, v]) => {
         // 表示effect的回调执行过了
         if (_effect._running) return
@@ -75,7 +74,7 @@ export function executeTrackEffect(target: object, key: symbol | string) {
     })
 }
 
-function createKeyDepsMap(key: string | symbol, cleanUp: Function) {
+export function createKeyDepsMap(key: string | symbol, cleanUp: Function) {
     const dep = new Map() as any
     dep.cleanUp = cleanUp
     dep.key = key

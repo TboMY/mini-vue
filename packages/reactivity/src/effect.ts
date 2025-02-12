@@ -81,7 +81,7 @@ function preCleanEffectDeps(_effect: ReactivityEffect) {
 }
 
 // 删除keyDepsMap中旧的_effect-_trackId 键值对
-function cleanKeyDepsEffect(keyDepsMap: Map<ReactivityEffect, number>, _effect: ReactivityEffect) {
+function cleanDepsEffect(keyDepsMap: Map<ReactivityEffect, number>, _effect: ReactivityEffect) {
     keyDepsMap.delete(_effect);
     if (keyDepsMap.size == 0) {
         // 如果map为空，则从reactiveState中删除这个属性
@@ -104,7 +104,7 @@ function postCleanEffect(_effect: ReactivityEffect) {
     deps.length = depsLength
 }
 
-export function createRealDeps(_effect: ReactivityEffect, keyDepsMap: Map<ReactivityEffect, number>) {
+export function trackEffect(_effect: ReactivityEffect, deps: Map<ReactivityEffect, number>) {
     // 这个map是state.key对应的map, 该map中每个key表示一个_effect对象,其value表示一个_trackId
     /*
        state: {
@@ -117,25 +117,25 @@ export function createRealDeps(_effect: ReactivityEffect, keyDepsMap: Map<Reacti
 
     // 每个effect的回调run一次_trackId才会自增一次
     // 并且要防止多次访问一个state时,重复收集
-    if (keyDepsMap.get(_effect) !== _effect._trackId) {
-        keyDepsMap.set(_effect, _effect._trackId)
+    if (deps.get(_effect) !== _effect._trackId) {
+        deps.set(_effect, _effect._trackId)
         /*
          比如 原来是 {name,age}
              现在是 {age,name} 暂时并不会复用的,
              暂时只是 一个一个遍历过来, 一一比对,相等就跳过, 不相等就简单的删除旧的,添加新的(keyDepsMap中删除, deps数组中直接覆盖)
          */
         const oldValue = _effect._deps[_effect._depsLength];
-        if (oldValue !== keyDepsMap) {
+        if (oldValue !== deps) {
             // 如果是undefined是新增,不然的话
             // 说明遍历过来, 老的和旧的已经对应不上了, 要删除keyDepsMap中的这个_effect
             if (oldValue) {
-                cleanKeyDepsEffect(keyDepsMap, _effect)
+                cleanDepsEffect(deps, _effect)
             }
 
             // 双向,各自保存一份依赖
             // 一个_effect关联了哪些state
-            console.log('_effect.deps中添加元素: ', keyDepsMap)
-            _effect._deps[_effect._depsLength++] = keyDepsMap
+            console.log('_effect.deps中添加元素: ', deps)
+            _effect._deps[_effect._depsLength++] = deps
         } else {
             _effect._depsLength++
         }
