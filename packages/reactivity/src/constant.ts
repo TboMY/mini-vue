@@ -7,3 +7,8 @@
 export const ReactivityFlags = {
     IS_REACTED: Symbol('__v_is_reacted')
 }
+
+export enum DirtyLevel {
+    NotDirty = 0,
+    Dirty = 4
+}

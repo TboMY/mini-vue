@@ -69,6 +69,8 @@ export function executeTrackEffect(keyDepsMap: Map<ReactivityEffect, number>) {
     keyDepsMap.entries().forEach(([_effect, v]) => {
         // 表示effect的回调执行过了
         if (_effect._running) return
+        // 表示数据又是脏数据了(即不是最新的了),下次get()的时候,要重新运行run()获取
+        _effect.dirty = true
         // 执行调度函数
         _effect?.scheduler?.()
     })

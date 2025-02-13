@@ -4,7 +4,11 @@
  * 公共方法
  */
 
-export function isObject(val) {
+export function isObject(val: any) {
     return val !== null && typeof val === 'object'
+}
+
+export function isFunction(val: any) {
+    return typeof val === 'function'
 }
 

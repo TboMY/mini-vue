@@ -3,6 +3,7 @@
  * @Date: 2025/1/19 17:13
  *
  */
+import {DirtyLevel} from "./constant";
 
 export let activeEffect: any;
 
@@ -39,8 +40,19 @@ export class ReactivityEffect {
     public _depsLength = 0
 
     // 不为0时,表示effect正在执行中, 防止在effect中既访问又修改reactive属性的值时,导致像react的useEffect中,栈溢出
-    _running = 0
+    public _running = 0
 
+    // 如果noDirty表示数据不为脏数据(即是effect中使用的是最新的,不用执行run方法),
+    // 否则需要执行run方法,获取最新值
+    private _dirtyLevel = DirtyLevel.Dirty
+
+    public get dirty() {
+        return this._dirtyLevel > DirtyLevel.NotDirty
+    }
+
+    public set dirty(v) {
+        v ? this._dirtyLevel = DirtyLevel.Dirty : this._dirtyLevel = DirtyLevel.NotDirty
+    }
 
     /**
      *
@@ -54,21 +66,24 @@ export class ReactivityEffect {
     }
 
     run() {
-        if (this._isReactive) {
-            const lastActiveEffect = activeEffect
-            try {
-                // 在proxy中的handler中用到
-                activeEffect = this
-                preCleanEffectDeps(this)
-                this._running++
-                this.fn()
-            } finally {
-                this._running--
-                // 当且仅当, 由effect中的回调函数引起代理的触发,才能够在handler中,用到_effect;
-                // 由其他地方引起的proxy的handler触发,不能用到_effect
-                activeEffect = lastActiveEffect //应对effect嵌套的时候,(其实就是一个栈,内层的effect回调执行后,触发handler之后,finally要回到外层的activeEffect去)
-                postCleanEffect(this)
-            }
+        this._dirtyLevel = DirtyLevel.NotDirty
+        if (!this._isReactive) {
+            return this.run()
+        }
+
+        const lastActiveEffect = activeEffect
+        try {
+            // 在proxy中的handler中用到
+            activeEffect = this
+            preCleanEffectDeps(this)
+            this._running++
+            return this.fn()
+        } finally {
+            this._running--
+            // 当且仅当, 由effect中的回调函数引起代理的触发,才能够在handler中,用到_effect;
+            // 由其他地方引起的proxy的handler触发,不能用到_effect
+            activeEffect = lastActiveEffect //应对effect嵌套的时候,(其实就是一个栈,内层的effect回调执行后,触发handler之后,finally要回到外层的activeEffect去)
+            postCleanEffect(this)
         }
     }
 }

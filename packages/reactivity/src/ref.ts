@@ -7,6 +7,7 @@ import {toReactive} from "./reactivity";
 import {createKeyDepsMap, executeTrackEffect, track, trigger} from "./reactiveEffect";
 import {activeEffect, ReactivityEffect, trackEffect} from "./effect";
 import {isObject} from "@mini-vue/shared";
+import {ComputedRefImpl} from "./computed";
 
 export function ref(value: any) {
     return createRef(value, false)
@@ -34,31 +35,34 @@ class RefImpl {
     }
 
     get value() {
-        trackRefValue(this)
+        trackRefValue(this,'ref_value')
         return this._value
     }
 
     set value(newValue: any) {
         if (!Object.is(newValue, this._rawValue)) {
             this._rawValue = newValue
-            this._value = newValue
-            // this._value = toReactive(newValue)
+            // todo 要不要包toReactive,有影响没
+
+            // this._value = newValue
+            this._value = toReactive(newValue)
             triggerRefValue(this)
         }
     }
 }
 
 
-function trackRefValue(ref: RefImpl) {
+// 临时加个参数,方便调试
+export function trackRefValue(ref: RefImpl | ComputedRefImpl,depsName?:string) {
     if (!activeEffect) return
 
-    ref._deps ??= createKeyDepsMap('_value', () => {
+    ref._deps ??= createKeyDepsMap(depsName||'_value', () => {
         ref._deps = undefined
     })
     trackEffect(activeEffect, ref._deps)
 }
 
-function triggerRefValue(ref: RefImpl) {
+export function triggerRefValue(ref: RefImpl | ComputedRefImpl) {
     const deps = ref._deps
     if (!deps) return
     executeTrackEffect(deps)
