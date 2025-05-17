@@ -69,3 +69,7 @@ function createReactiveObject(target) {
 export function toReactive(target: any) {
     return createReactiveObject(target)
 }
+
+export function isReactive(target: object){
+    return target && target[ReactivityFlags.IS_REACTED]
+}

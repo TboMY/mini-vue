@@ -6,6 +6,7 @@
 import {isFunction} from "@mini-vue/shared";
 import { ReactivityEffect,} from "./effect";
 import {trackRefValue, triggerRefValue} from "./ref";
+import {ReactivityFlags} from "./constant";
 
 type ComputedOptions = {
     get: Function,
@@ -29,7 +30,7 @@ export function computed(getterOrOptions: Function | ComputedOptions) {
 }
 
 export class ComputedRefImpl {
-    private readonly __v_isRef = true
+    private readonly [ReactivityFlags.IS_REF] = true
 
     /*
     具体流程:

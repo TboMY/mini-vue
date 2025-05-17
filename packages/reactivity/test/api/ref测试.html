@@ -16,17 +16,24 @@
     name: 'cj'
   })
 
+  const state=ref({
+    a:9999
+  })
+
   // console.log(count.value)
   // console.log(obj.value)
 
   effect(() => {
-    const text = obj.value.name
-    document.body.innerHTML = text
+    console.log('effect执行')
+    // const text = obj.value.name
+    // document.body.innerHTML = text
+    document.body.innerHTML=state.value.a
   })
 
   setTimeout(() => obj.value = {}, 1000)
   setTimeout(() => obj.value={name:'jjjj'}, 2000)
   // setTimeout(() => obj.value = { name: 'abc' }, 3000)
+  setTimeout(() => state.value.a=8888, 3000)
 
 </script>
 </html>

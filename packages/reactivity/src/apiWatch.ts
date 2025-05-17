@@ -3,25 +3,36 @@
  * @Date: 2025/3/14 上午11:27
  *
  */
-import {isObject} from "@mini-vue/shared";
+import {isFunction, isObject} from "@mini-vue/shared";
 import {ReactivityEffect} from "./effect";
-import {unref} from "./ref";
+import {isRef} from "./ref";
+import {isReactive} from "./reactivity";
+
+
+interface Options {
+    deep: boolean,
+    depth: number,
+    immediate: boolean
+}
 
 interface Params {
     source: object,
     cb: (newValue, oldValue) => void,
-    options: {
-        deep: boolean,
-        depth: number
-    }
+    options: Options
 }
 
 export function watch(
     source: object,
     cb: (newValue, oldValue) => void,
-    options = {deep: false, depth: 1}
+    options: Options
 ) {
     doWatch({source, cb, options})
+}
+
+// 其实watchEffect()和effect()基本一模一样; 都是传入一个fn, 自动搜集依赖, 依赖更新再重新执行;
+// 不过有options的区别
+export function watchEffect(fn: Function, options: Options) {
+    doWatch({source:fn, null, options})
 }
 
 function doWatch(
@@ -30,7 +41,7 @@ function doWatch(
         cb,
         options
     }: Params) {
-    let {deep, depth} = options
+    let {deep, depth, immediate} = options
     if (isNaN(Number(depth)) || depth < 1) {
         depth = 1
     }
@@ -43,22 +54,57 @@ function doWatch(
 
     const reactiveGetter = (source) => traverse(source, Math.max(depth, deep))
 
-    const getter = () => reactiveGetter(source)
+    let getter = () => {
+    }
+    // 是响应式才有意义, 才需要遍历key来手机依赖
+    // 并且,
+    // 对于reactive对象, 默认支持一层属性监听
+    // 对于ref, 只支持ref.value被直接改变; 如果ref.value是对象, 对象的key被改变,不会触发回调
+    // 对于getter函数, 取决于函数内怎么访问的(其实就是effect中的回调函数fn)
+    if (isReactive(source) || isRef(source)) {
+        getter = () => reactiveGetter(source)
+    } else if (isRef(source)) {
+        getter = source.value
+    } else if (isFunction(source)) {
+        getter = source
+    }
 
     const scheduler = () => {
+        // 其实就是watchEffect
+        if (!cb) {
+            _effect.run()
+            return
+        }
         newValue = _effect.run()
         cb(newValue, oldValue)
         oldValue = newValue
     }
 
+    // 这里要让这个_effect和reactive的key建立双向绑定的关系,
+    // 所以要使用_effect.run()而不能直接getter(); 包括scheduler里面也是这个原因
+    // 要在run方法中, 切换activeEffect为当前_effect
     const _effect = new ReactivityEffect(getter, scheduler)
-    oldValue = _effect.run()
+
+    // 没有cb其实就是watchEffect
+    if (cb) {
+        // 如果需要立即执行
+        if (immediate) {
+            scheduler()
+        } else {
+            oldValue = _effect.run()
+        }
+    } else {
+        // 如果是watch, 则立即执行的getter,
+        // 如果是watchEffect, 则立即执行的是传入的fn
+        // 同时兼顾了watch的immediate和watchEffect
+        _effect.run()
+    }
 }
 
 
 // 后续可能会支持具体支持监控几层, 所以用到了depth
 function traverse(source, depth, currentDepth = 0, set = new Set()) {
-    if (!isObject(unref(source))) {
+    if (!isObject(source)) {
         return source
     }
 
@@ -72,8 +118,8 @@ function traverse(source, depth, currentDepth = 0, set = new Set()) {
     }
 
     set.add(source)
-    for (const key in unref(source)) {
-        traverse(unref(source)[key], depth, currentDepth + 1, set)
+    for (const key in source) {
+        traverse(source[key], depth, currentDepth + 1, set)
     }
     return source;
 }

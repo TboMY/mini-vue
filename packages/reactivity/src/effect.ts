@@ -78,7 +78,7 @@ export class ReactivityEffect {
             activeEffect = this
             preCleanEffectDeps(this)
             this._running++
-            return this.fn()
+            return this?.fn()
         } finally {
             this._running--
             // 当且仅当, 由effect中的回调函数引起代理的触发,才能够在handler中,用到_effect;

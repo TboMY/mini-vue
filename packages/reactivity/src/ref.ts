@@ -8,6 +8,7 @@ import {createKeyDepsMap, executeTrackEffect, track, trigger} from "./reactiveEf
 import {activeEffect, ReactivityEffect, trackEffect} from "./effect";
 import {isObject} from "@mini-vue/shared";
 import {ComputedRefImpl} from "./computed";
+import {ReactivityFlags} from "./constant";
 
 export function ref(value: any) {
     return createRef(value, false)
@@ -18,7 +19,7 @@ function createRef(value: any, shallow: boolean) {
 }
 
 class RefImpl {
-    private readonly __v_isRef = true
+    private readonly [ReactivityFlags.IS_REF] = true
 
     private _rawValue: any
 
@@ -77,7 +78,7 @@ export function triggerRefValue(ref: RefImpl | ComputedRefImpl) {
 // 即toRef之后,ref改变原来的reactive内的值也改变,反之成立; 因为是引用
 class ObjectRefImpl {
 
-    private readonly __v_isRef = true
+    private readonly [ReactivityFlags.IS_REF] = true
 
     private readonly _object: any
 
@@ -131,7 +132,7 @@ export function proxyRefs(target: object) {
 
 export function isRef(target: any) {
     if (!isObject(target)) return false
-    return Boolean(target['__v_isRef'])
+    return Boolean(target[ReactivityFlags.IS_REF])
 }
 
 export function unref(ref: any) {
