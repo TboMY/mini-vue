@@ -75,7 +75,7 @@ export class ComputedRefImpl {
             this._value = this._effect.run()
         }
         // 不能写在if内, 如果第一次没有在effect内访问, 导致dirty变为false了,
-        // 然后再在effect内访问, 此时就不会收集这个effect回调产生的_effect实例与这个computed之间的依赖了
+        // 然后再在effect内访问, 此时就不会收集computed的getter中用的reactive数据的依赖了, reactive与computed._effect就没有关系了
         trackRefValue(this,'computed_value')
         return this._value
     }
