@@ -31,9 +31,14 @@ export function computed(getterOrOptions: Function | ComputedOptions) {
 export class ComputedRefImpl {
     private readonly __v_isRef = true
 
-    // ReactivityEffect实例,
-    // 最初相当于effect的回调函数和ReactivityEffect实例关联; 因为回调函数内用到了reactive,然后触发proxy,然后收集依赖,然后reactive变化重新执行effect的回调函数
-    // 这里相当于computed内,也是回调函数(getter),用到了reactive,然后触发proxy,然后收集依赖,然后然后reactive变化重新执行getter;
+    /*
+    具体流程:
+        1. effect内的回调函数用到了computed, 然后触发了getter, 这个时候getter内用到了reactive(或ref), 然后通过track或者trackRefValue收集依赖;
+        2. computed中的用_deps, 也用trackRefValue方法, 收集了最外面的_effect;(即对应用了computed的这个回调函数)
+        3. computed中用到的ref或reactive变化了, 触发executeTrackEffect, 然后触发computed中的_effect的scheduler;
+        4. computed中_effect的scheduler调用了triggerRefValue, 在这个方法中, 用computed的_deps, 将用到了computed的所有_effect的run方法执行一遍(即执行最开始的回调函数);
+        5. 回调函数执行的时候,用到了computed,即又从1开始了;
+     */
     private _effect: ReactivityEffect
 
     // 缓存的值
@@ -49,7 +54,7 @@ export class ComputedRefImpl {
         this._getter = getter
         this._setter = setter
         this._effect = new ReactivityEffect(
-            // 回调函数fn
+            // 回调函数fn(computed中的getter有一个形参,可以接受原来的老值)
             () => getter(this._value),
             // 调度函数
             () => {
@@ -58,11 +63,15 @@ export class ComputedRefImpl {
                 // 本质是因为react数据被修改了才引起的调度函数执行,而不是因为set了computed;  在set里面可能会修改react数据,也可能不修改;
                 triggerRefValue(this)
             })
+
+        // 这里为了debugger, 加个方便辨认的参数
+        this._effect.name = 'computed'
     }
 
     get value() {
         // 默认是脏的,所以初次会执行
         if (this._effect.dirty) {
+            // debugger
             this._value = this._effect.run()
         }
         // 不能写在if内, 如果第一次没有在effect内访问, 导致dirty变为false了,

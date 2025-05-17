@@ -26,6 +26,10 @@ class RefImpl {
 
     private _shallow: boolean
 
+    // 这里的deps是一个map; 对于ref和computed来说, 都是一个map
+    // 与reactive有所不同, 这里的_deps相当于其proxy中调用的track方法中的keyDepsMap,
+    // reactive本身并没有这样的一个map属性, 而是存在外部的, 因为reactive没有用get和set,用的proxy
+    // 而ref和computed是用get和set的; // 从实现来看ref和computed更像; 而reactive单独的;  // 当然不同版本应该不一样
     public _deps: Map<ReactivityEffect, number> | undefined;
 
     constructor(rawValue: any, shallow: boolean) {
@@ -52,7 +56,7 @@ class RefImpl {
 }
 
 
-// 临时加个参数,方便调试
+// depsName: 临时加个参数,方便调试
 export function trackRefValue(ref: RefImpl | ComputedRefImpl,depsName?:string) {
     if (!activeEffect) return
 

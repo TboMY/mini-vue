@@ -20,6 +20,7 @@ export function effect(callback: Function, options?: any) {
     if (options) {
         Object.assign(_effect, options)
     }
+    // 绑定this,防止this指向错误
     const runner = _effect.run.bind(_effect)
     runner.effect = _effect
     return runner
@@ -109,6 +110,7 @@ function cleanDepsEffect(keyDepsMap: Map<ReactivityEffect, number>, _effect: Rea
 function postCleanEffect(_effect: ReactivityEffect) {
     const depsLength = _effect._depsLength;
     const deps = _effect._deps;
+    // 对于等于的情况: 当依赖的state都没有变化时, 指针在指向数组中最后一个state后,仍要++,刚好等于deps.length
     if (depsLength <= deps.length) return
 
     for (let i = depsLength; i < deps.length; i++) {
@@ -143,6 +145,9 @@ export function trackEffect(_effect: ReactivityEffect, deps: Map<ReactivityEffec
         if (oldValue !== deps) {
             // 如果oldValue是undefined是新增,不然的话
             // 说明遍历过来, 老的和旧的已经对应不上了, 要删除keyDepsMap中的这个_effect
+
+            // 那为什么不在一起清除_effect._deps[_effect._depsLength]呢? 因为如果这里清除了数组长度就变了_effect._depsLength不准了
+            // todo 那如果是不改变数组长度, 使用_effect._deps[_effect._depsLength]=null呢?  // 感觉也行,最后把_effect._deps中为null的清除
             if (oldValue) {
                 cleanDepsEffect(deps, _effect)
             }
