@@ -17,7 +17,7 @@ const proxyHandlers = {
         if (key === ReactivityFlags.IS_REACTED) {
             return true
         }
-        console.log('getHandlers,key= ', key)
+        // console.log('getHandlers,key= ', key)
         track(target, key)
 
         // 递归代理, 懒代理

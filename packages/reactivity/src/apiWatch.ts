@@ -17,7 +17,7 @@ interface Options {
 
 interface Params {
     source: object,
-    cb: (newValue, oldValue) => void,
+    cb?: (newValue, oldValue, onCleanup) => void,
     options: Options
 }
 
@@ -25,21 +25,21 @@ export function watch(
     source: object,
     cb: (newValue, oldValue) => void,
     options: Options
-) {
-    doWatch({source, cb, options})
+): Function {
+    return doWatch({source, cb, options})
 }
 
 // 其实watchEffect()和effect()基本一模一样; 都是传入一个fn, 自动搜集依赖, 依赖更新再重新执行;
 // 不过有options的区别
-export function watchEffect(fn: Function, options: Options) {
-    doWatch({source:fn, null, options})
+export function watchEffect(fn: (onCleanup) => void, options: Options): Function {
+    return doWatch({source: fn, cb: null, options})
 }
 
 function doWatch(
     {
         source,
         cb,
-        options
+        options = {}
     }: Params) {
     let {deep, depth, immediate} = options
     if (isNaN(Number(depth)) || depth < 1) {
@@ -69,14 +69,28 @@ function doWatch(
         getter = source
     }
 
+
+    let clean;
+    const onCleanup = (fn: Function) => {
+        clean = () => {
+            fn && fn()
+            clean = undefined
+        }
+    }
+
     const scheduler = () => {
+        // debugger
+        if (clean) {
+            clean()
+        }
+
         // 其实就是watchEffect
         if (!cb) {
             _effect.run()
             return
         }
         newValue = _effect.run()
-        cb(newValue, oldValue)
+        cb(newValue, oldValue, onCleanup)
         oldValue = newValue
     }
 
@@ -98,6 +112,11 @@ function doWatch(
         // 如果是watchEffect, 则立即执行的是传入的fn
         // 同时兼顾了watch的immediate和watchEffect
         _effect.run()
+    }
+
+    // 返回unWatcher
+    return () => {
+        _effect.stop()
     }
 }
 

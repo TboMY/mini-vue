@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script type="module">
+
+  import { reactive, ref, effect, watch, computed } from '../../dist/reactivity.js'
+
+  const state = reactive({
+    stateA: 1,
+    stateB: 10,
+    stateDepth: {
+      n: 99
+    }
+  })
+
+  const refState = ref({
+    refA: -1,
+    refB: -10,
+    refDepth: {
+      n: -99
+    }
+  })
+
+  const computedState = computed({
+    get () {
+      return state.stateA * refState.value.refB
+    },
+    set ( v ) {
+      state.stateA = 999
+    }
+  })
+
+  const un1 = watch(state, ( newValue, oldValue, onCleanup ) => {
+    console.log('reactive的watch')
+
+    onCleanup(() => {
+      console.log('cleanup')
+    })
+
+    console.log('newValue-reactive', newValue)
+    console.log('oldValue-reactive', oldValue)
+  })
+
+  // un1()
+
+  // const un2 = watch(refState, ( newValue, oldValue, onCleanup ) => {
+  //   console.log('ref的watch')
+  //
+  //   onCleanup(() => {
+  //     un2()
+  //   })
+  //
+  //   console.log('newValue-ref', newValue)
+  //   console.log('oldValue-ref', oldValue)
+  // })
+  //
+  // const un3 = watch(computedState, ( newValue, oldValue, onCleanup ) => {
+  //   console.log('computed的watch')
+  //   onCleanup(() => {
+  //     un3()
+  //   })
+
+  //   console.log('newValue-computed', newValue)
+  //   console.log('oldValue-computed', oldValue)
+  // })
+
+  setTimeout(() => {
+    state.stateA = 100
+    // refState.value='refref'
+    // computedState.value = 99
+  }, 2000)
+
+  // setTimeout(()=>{
+  //   un1()
+  // },3500)
+
+  setTimeout(() => {
+    state.stateA = -1111
+    // refState.value='____refref'
+    // computedState.value = -99999
+  }, 5000)
+
+
+</script>
+</html>

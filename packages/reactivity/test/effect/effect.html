@@ -22,8 +22,11 @@
 
   effect(() => {
     console.log('%c effect的回调执行了', 'color:green;')
+    // 这样写导致_effect._deps的长度没变, 导致postCleanEffect有bug都没测出来; 应该是if (depsLength >= deps.length) return, 而不是<=
     // document.body.innerHTML = `name:${ state.name } age:${ state.age }`
-    document.body.innerHTML = state.flag ? `name:${ state.name }` : `age:${ state.age }`
+
+    // 让引用的state数量从2->1; 测试postCleanEffect和trackEffect
+    document.body.innerHTML = state.flag ? `name:${ state.name }` : `age:`
   })
 
   // setInterval(() => state.age=81, 1000)
