@@ -32,12 +32,12 @@
       return state.a * refState.value.y
     },
     set(v){
-      state.a=99
+      state.a=v
     }
   })
 
-  effect(() => {
-    console.log('effect回调执行')
+  // effect(() => {
+  //   console.log('effect回调执行')
 
     // watch(state, ( newValue, oldValue ) => {
     //   console.log('newValue', newValue)
@@ -49,14 +49,19 @@
     //   console.log('oldValue-ref', oldValue)
     // },{deep: true})
 
-    watch(computedState, ( newValue, oldValue ) => {
+
+
+  // })
+
+  watch(computedState, ( newValue, oldValue ) => {
       console.log('newValue-computed', newValue)
       console.log('oldValue-computed', oldValue)
     })
 
-  })
-
   setTimeout(() => {
+    // bug: 如果新增一个原来没有的属性, 目前不会触发watch
+    // state.stateC = 1000
+
     state.a = 100
     // refState.value.depth = {}
     // refState.value.depth.n=11;
