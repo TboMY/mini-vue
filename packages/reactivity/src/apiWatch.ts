@@ -16,7 +16,7 @@ interface Options {
 }
 
 interface Params {
-    source: object,
+    source: any,
     cb?: (newValue, oldValue, onCleanup) => void,
     options: Options
 }
@@ -24,7 +24,7 @@ interface Params {
 export function watch(
     source: object,
     cb: (newValue, oldValue) => void,
-    options: Options
+    options?: Options
 ): Function {
     return doWatch({source, cb, options})
 }
@@ -39,32 +39,32 @@ function doWatch(
     {
         source,
         cb,
-        options = {}
+        options
     }: Params) {
-    let {deep, depth, immediate} = options
+    let {deep, depth, immediate} = options || {}
     if (isNaN(Number(depth)) || depth < 1) {
         depth = 1
     }
     if (deep) {
-        deep = Number.MAX_VALUE
+        depth = Number.MAX_VALUE
     }
 
     let oldValue;
     let newValue;
 
-    const reactiveGetter = (source) => traverse(source, Math.max(depth, deep))
+    const reactiveGetter = (source) => traverse(source, depth)
 
     let getter = () => {
     }
-    // 是响应式才有意义, 才需要遍历key来手机依赖
+    // 是响应式才有意义, 才需要遍历key来收集依赖
     // 并且,
     // 对于reactive对象, 默认支持一层属性监听
     // 对于ref, 只支持ref.value被直接改变; 如果ref.value是对象, 对象的key被改变,不会触发回调
     // 对于getter函数, 取决于函数内怎么访问的(其实就是effect中的回调函数fn)
-    if (isReactive(source) || isRef(source)) {
+    if (isReactive(source)) {
         getter = () => reactiveGetter(source)
     } else if (isRef(source)) {
-        getter = source.value
+        getter = () => source.value
     } else if (isFunction(source)) {
         getter = source
     }

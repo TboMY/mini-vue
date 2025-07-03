@@ -36,6 +36,9 @@
     }
   })
 
+  /**
+   * watch reactive
+   */
   const un1 = watch(state, ( newValue, oldValue, onCleanup ) => {
     console.log('reactive的watch')
 
@@ -49,41 +52,54 @@
 
   // un1()
 
-  // const un2 = watch(refState, ( newValue, oldValue, onCleanup ) => {
-  //   console.log('ref的watch')
-  //
-  //   onCleanup(() => {
-  //     un2()
-  //   })
-  //
-  //   console.log('newValue-ref', newValue)
-  //   console.log('oldValue-ref', oldValue)
-  // })
-  //
-  // const un3 = watch(computedState, ( newValue, oldValue, onCleanup ) => {
-  //   console.log('computed的watch')
-  //   onCleanup(() => {
-  //     un3()
-  //   })
+  /**
+   * watch ref
+   */
+  const un2 = watch(refState, ( newValue, oldValue, onCleanup ) => {
+    console.log('ref的watch')
 
-  //   console.log('newValue-computed', newValue)
-  //   console.log('oldValue-computed', oldValue)
-  // })
+    onCleanup(() => {
+      un2()
+    })
+
+    console.log('newValue-ref', newValue)
+    console.log('oldValue-ref', oldValue)
+  })
+
+  // un2()
+
+  /**
+   * watch computed
+   */
+  const un3 = watch(computedState, ( newValue, oldValue, onCleanup ) => {
+    console.log('computed的watch')
+    onCleanup(() => {
+      un3()
+    })
+
+    console.log('newValue-computed', newValue)
+    console.log('oldValue-computed', oldValue)
+  })
+
+  //  ==========================================================================
+  // 修改
 
   setTimeout(() => {
     state.stateA = 100
-    // refState.value='refref'
-    // computedState.value = 99
+    refState.value = 'refref'
+    computedState.value = 99
+    console.log('------------------')
   }, 2000)
 
-  // setTimeout(()=>{
-  //   un1()
-  // },3500)
+  setTimeout(()=>{
+    // un1()
+    // un2()
+  },3500)
 
   setTimeout(() => {
     state.stateA = -1111
-    // refState.value='____refref'
-    // computedState.value = -99999
+    refState.value = '____refref'
+    computedState.value = -99999
   }, 5000)
 
 

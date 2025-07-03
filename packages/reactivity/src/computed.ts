@@ -66,6 +66,7 @@ export class ComputedRefImpl {
             })
 
         // 这里为了debugger, 加个方便辨认的参数
+        // @ts-ignore
         this._effect.name = 'computed'
     }
 
