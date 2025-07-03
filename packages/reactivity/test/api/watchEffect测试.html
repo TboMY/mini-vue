@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script type="module">
+
+  import { reactive, ref, effect, watch, computed, watchEffect } from '../../dist/reactivity.js'
+
+  const state = reactive({
+    a: 123,
+    b: 456,
+    depth: {
+      n: 999
+    }
+  })
+
+  const refState = ref({
+    x: 123,
+    y: 10,
+    depth: {
+      n: 999
+    }
+  })
+
+  const computedState = computed({
+    get () {
+      return state.a * refState.value.y
+    },
+    set ( v ) {
+      state.a = v
+    }
+  })
+
+  const un = watchEffect(() => {
+    // console.log('state.a:', state.a)
+    // console.log('ref', refState.value.y)
+    // console.log('computedState:', computedState.value)
+    console.log(state.depth.n)
+    console.log('=======')
+  })
+  // --------------------------------------------------
+  // 修改
+
+  setTimeout(() => {
+    // state.a = 456
+    // refState.value.x = 789
+    // computedState.value = 1000
+    state.depth={}
+  }, 2000)
+
+  // setTimeout(() => {
+  //   un()
+  //   console.log('--------------------stop-------------------')
+  // }, 3000)
+  //
+  //
+  // setTimeout(() => {
+  //   state.a = 789
+  //   refState.value.x = 1000
+  //   computedState.value = 2000
+  // }, 4000)
+
+
+
+</script>
+</html>

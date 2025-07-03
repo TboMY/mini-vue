@@ -145,7 +145,8 @@ function postCleanEffect(_effect: ReactivityEffect) {
 // _effect就是一个ReactivityEffect实例,
 // keyMapDeps就是一个存着若干_effect的map
 export function trackEffect(_effect: ReactivityEffect, keyMapDeps: Map<ReactivityEffect, number>) {
-    // 这个map是state.key对应的map, 该map中每个key表示一个_effect对象,其value表示一个_trackId
+    // 这个map是**state.key**对应的map, 该map中每个key表示一个_effect对象,其value表示一个_trackId;
+    // 即是这个key1所对应的map, 是一个state的键对应的map,表示这个键在哪些_effect中被访问过;(即哪些地方访问过state.key1)
     /*
        state: {
             key1:{
