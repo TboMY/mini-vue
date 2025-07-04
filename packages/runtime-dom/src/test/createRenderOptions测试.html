@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .aaa {
+            display: flex;
+            width: 100px;
+            height: 100px;
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+
+</body>
+<script type="module">
+  import { h, createRenderer } from '../../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+
+  import { createRendererOptions } from '../../dist/runtime-dom.js'
+
+  console.log(createRenderer)
+
+  const render = createRenderer(createRendererOptions)
+
+  const el = h('h1', {
+    style: { color: 'black' },
+    onClick: () => alert(1111),
+    class: 'aaa',
+    xyz: 111
+  }, 'jjjjjjjj')
+
+  render.render(el, document.body)
+
+  // console.log(createRendererOptions)
+
+</script>
+</html>
