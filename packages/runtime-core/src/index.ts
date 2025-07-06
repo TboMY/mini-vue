@@ -3,6 +3,7 @@
  * @Date: 2025/7/5 下午4:14
  *
  */
+import {isString, ShapeFlags} from "@mini-vue/shared";
 
 export interface createRendererOptions {
     insert: (el: Node, parent: Node, refer?: Node) => void;
@@ -70,8 +71,6 @@ export function createRenderer(options: createRendererOptions) {
         if (!preVNode) {
             mountedElement(newVNode, container)
         }
-
-
     }
 
     /**
@@ -80,13 +79,23 @@ export function createRenderer(options: createRendererOptions) {
      * @param container
      */
     const mountedElement = (vNode, container) => {
-        const {type, props, children} = vNode
+        const {type, props, children, shapeFlag} = vNode
         const mountedEl = hostCreateElement(type)
         hostInsert(mountedEl, container)
         props && setProps(mountedEl, null, props)
-        //
-        // 暂时假定都是text, 测试一下
-        hostSetElementText(mountedEl, children)
+
+        // 这里通过位运算判断children的类型; 类似前端组件权限控制的方式
+
+        // 只是一个文本
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            hostSetElementText(mountedEl, children)
+        } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+            // 是一个数组,
+            mountedChildren(mountedEl, children)
+        } else if (shapeFlag & ShapeFlags.ELEMENT) {
+            // 是一个el
+            patch(null, children, mountedEl)
+        }
 
     }
 
@@ -111,18 +120,20 @@ export function createRenderer(options: createRendererOptions) {
         });
     }
 
-    const setChildren = (el, children) => {
-        if (!children) return
-
-        if (Array.isArray(children)) {
-
-        }
-
-    }
-
-    const setChild = (el, child) => {
-        if (!child) return
-
+    /**
+     * mounted时, 循环递归地渲染children
+     * @param el
+     * @param children
+     */
+    const mountedChildren = (el, children) => {
+        children.forEach(child => {
+            debugger
+            if (isString(child)) {
+                hostSetElementText(el, child)
+                return
+            }
+            patch(null, child, el)
+        })
     }
 
 

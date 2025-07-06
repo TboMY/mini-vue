@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script type="module">
+  import { h } from '../node_modules/vue/dist/vue.runtime.esm-browser.js'
+  import { render } from '../../runtime-dom/dist/runtime-dom.js'
+
+  console.log(render)
+
+  // const textEl = h('h1', { style: { color: 'red' }, onClick: () => alert('click') }, 'cjcjcjcj')
+  // render.render(textEl, document.body)
+
+  const arrEl = h('h1', { style: { color: 'red' }, onClick: () => alert('click') }, 'text1',
+    h('h2', { style: { color: 'blue' } }, 'childElementText'))
+  render.render(arrEl, document.body)
+
+
+</script>
+</html>
