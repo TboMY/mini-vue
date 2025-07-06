@@ -4,6 +4,8 @@
  * 公共方法
  */
 
+export * from './shapeFlags.ts'
+
 export function isObject(val: any) {
     return val !== null && typeof val === 'object'
 }
@@ -11,4 +13,6 @@ export function isObject(val: any) {
 export function isFunction(val: any) {
     return typeof val === 'function'
 }
+
+
 

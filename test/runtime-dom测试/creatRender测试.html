@@ -10,11 +10,44 @@
 <script type="module">
   import { h, createRenderer } from '../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
 
-  const render = createRenderer({
-
-  })
-
   console.log(createRenderer)
+
+  const el = h('div', { style: { color: 'red' }, onClick: () => alert(123) }, '123','8888')
+  console.log(el)
+
+  const vnode = {
+    '__v_isVNode': true,
+    '__v_skip': true,
+    'type': 'div',
+    'props': {
+      'style': {
+        'color': 'red'
+      }
+    },
+    'key': null,
+    'ref': null,
+    'scopeId': null,
+    'slotScopeIds': null,
+    'children': '123',
+    'component': null,
+    'suspense': null,
+    'ssContent': null,
+    'ssFallback': null,
+    'dirs': null,
+    'transition': null,
+    'el': null,
+    'anchor': null,
+    'target': null,
+    'targetStart': null,
+    'targetAnchor': null,
+    'staticCount': 0,
+    'shapeFlag': 9,
+    'patchFlag': 0,
+    'dynamicProps': null,
+    'dynamicChildren': null,
+    'appContext': null,
+    'ctx': null
+  }
 
 </script>
 </html>
