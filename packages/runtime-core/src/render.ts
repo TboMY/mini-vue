@@ -45,7 +45,7 @@ export function createRenderer(options: createRendererOptions) {
      * @param container
      */
     const render = (vNode, container) => {
-        debugger
+        // debugger
 
         // 如果第一次渲染,preVNode为null
         patch(container._vnode || null, vNode, container, null)
@@ -93,9 +93,6 @@ export function createRenderer(options: createRendererOptions) {
         } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
             // 是一个数组,
             mountedChildren(mountedEl, children)
-        } else if (shapeFlag & ShapeFlags.ELEMENT) {
-            // 是一个el
-            patch(null, children, mountedEl, null)
         }
 
     }
@@ -128,7 +125,7 @@ export function createRenderer(options: createRendererOptions) {
      */
     const mountedChildren = (el, children) => {
         children.forEach(child => {
-            debugger
+            // debugger
             if (isString(child)) {
                 hostSetElementText(el, child)
                 return

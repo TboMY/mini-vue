@@ -5,6 +5,7 @@
  */
 export * from './render'
 export * from './h'
+export {createVNode} from "./vNode";
 
 
 

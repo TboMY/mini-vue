@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script type="module">
+  import { render, h } from '../../runtime-dom/dist/runtime-dom.js'
+
+  // 测试不同参数组合
+  const vnode1 = h('div') // 只有 type
+  const vnode2 = h('div', { class: 'container' }) // type + props
+  const vnode3 = h('div', 'Hello') // type + text child
+  const vnode4 = h('div', [ h('span') ]) // type + array children
+  const vnode5 = h('div', { id: 'app' }, 'Hello', h('span')) // 多个children
+
+  // 测试 children 标准化
+  const vnode6 = h('div', 123) // 数字 -> 字符串
+  const vnode7 = h('div', true) // 布尔值 -> 字符串
+  const vnode8 = h('div', [ 123, [ h('span'), 456 ] ]) // 嵌套数组
+
+  console.log('vnode1:', vnode1)
+  console.log('vnode2:', vnode2)
+  console.log('vnode3:', vnode3)
+  console.log('vnode4:', vnode4)
+  console.log('vnode5:', vnode5)
+  console.log('vnode6:', vnode6)
+  console.log('vnode7:', vnode7)
+  console.log('vnode8:', vnode8)
+
+  // 渲染到页面
+  // render.render(vnode1, document.body)
+  // render.render(vnode2, document.body)
+  // render.render(vnode3, document.body)
+  // render.render(vnode4, document.body)
+  // render.render(vnode5, document.body)
+  render.render(vnode6, document.body)
+  // render.render(vnode7, document.body)
+  // render.render(vnode8, document.body)
+
+
+</script>
+</html>

@@ -17,7 +17,6 @@ export enum DirtyLevel {
 }
 
 
-
 export enum ShapeFlags {
     ELEMENT = 1,
     FUNCTIONAL_COMPONENT = 1 << 1,
@@ -30,4 +29,8 @@ export enum ShapeFlags {
     COMPONENT_SHOULD_KEEP_ALIVE = 1 << 8,
     COMPONENT_KEPT_ALIVE = 1 << 9,
     COMPONENT = ShapeFlags.STATEFUL_COMPONENT | ShapeFlags.FUNCTIONAL_COMPONENT,
+}
+
+export const RuntimeFlags = {
+    IS_V_NODE: Symbol('__v_is_v_node')
 }
