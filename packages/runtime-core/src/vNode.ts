@@ -64,3 +64,7 @@ const createChildren = (children: any) => {
 export function isVNode(val: any) {
     return isObject(val) && val[RuntimeFlags.IS_V_NODE]
 }
+
+export function isSameVNode(n1: any, n2: any) {
+    return n1.type === n2.type && n1.key === n2.key
+}

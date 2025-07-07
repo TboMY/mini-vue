@@ -5,6 +5,7 @@
  */
 
 import {isString, ShapeFlags} from "@mini-vue/shared";
+import {isSameVNode} from "./vNode";
 
 export interface createRendererOptions {
     insert: (el: Node, parent: Node, refer?: Node) => void;
@@ -68,10 +69,22 @@ export function createRenderer(options: createRendererOptions) {
 
         if (!newVNode) return;
 
+        // 前后两次虚拟dom变了(type或key变了); 就删除老dom,重新渲染新dom
+        if (preVNode && !isSameVNode(preVNode, newVNode)) {
+            unMount(preVNode.el)
+            preVNode = null
+        }
+
         // 初次渲染
         if (!preVNode) {
-            mountedElement(newVNode, container)
+            return mountedElement(newVNode, container)
+        } else {
+            // 两个虚拟dom的key和type都没变;
+            // 就要复用原来的真实dom; 更新其属性和children
+            patchElement(preVNode, newVNode)
         }
+
+
     }
 
     /**
@@ -81,7 +94,7 @@ export function createRenderer(options: createRendererOptions) {
      */
     const mountedElement = (vNode, container) => {
         const {type, props, children, shapeFlag} = vNode
-        const mountedEl = hostCreateElement(type)
+        const mountedEl = vNode.el = hostCreateElement(type)
         hostInsert(mountedEl, container)
         props && setProps(mountedEl, null, props)
 
@@ -132,6 +145,39 @@ export function createRenderer(options: createRendererOptions) {
             }
             patch(null, child, el, null)
         })
+    }
+
+    // n1, n2 对应的真实dom是一样的
+    const patchElement = (vNode1, vNode2) => {
+        const props1 = vNode1.props || {}
+        const props2 = vNode2.props || {}
+        const el = vNode2.el = vNode1.el
+
+        // 新的都保留
+        for (const key in props2) {
+            hostPatchProp(el, key, props1[key], props2[key])
+        }
+
+        // 老的有,新的没有要删除
+        for (const key in props1) {
+            if (!(key in props2)) {
+                hostPatchProp(el, key, props1[key], props2[key])
+            }
+        }
+
+        // 更新children
+        const children1 = vNode1.children || {}
+        const children2 = vNode2.children || {}
+        patchChildren({vNode1, vNode2, children1, children2})
+    }
+
+    const patchChildren = ({vNode1, vNode2, children1, children2}) => {
+
+
+    }
+
+    const unMount = (vNode) => {
+        hostRemove(vNode.el)
     }
 
 
