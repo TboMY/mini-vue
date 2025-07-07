@@ -57,7 +57,7 @@ esbuild.context({
   //如果为iife,则需要指定全局变量名称
   globalName: packageJson.buildOptions?.name || moduleName
 }).then(ctx=>{
-  console.log('start')
+  console.log('========开始=========')
   return ctx.watch()
 })
 

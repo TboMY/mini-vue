@@ -8,7 +8,7 @@ import {createKeyDepsMap, executeTrackEffect, track, trigger} from "./reactiveEf
 import {activeEffect, ReactivityEffect, trackEffect} from "./effect";
 import {isObject} from "@mini-vue/shared";
 import {ComputedRefImpl} from "./computed";
-import {ReactivityFlags} from "./constant";
+import {ReactivityFlags} from "../../shared/src/constant";
 
 export function ref(value: any) {
     return createRef(value, false)

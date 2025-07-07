@@ -5,7 +5,7 @@
  */
 
 import {isObject} from '@mini-vue/shared'
-import {ReactivityFlags} from "./constant";
+import {ReactivityFlags} from "../../shared/src/constant";
 import {track, trigger} from "./reactiveEffect";
 
 // 缓存已经reactive过的object, 弱引用,防止内存泄漏

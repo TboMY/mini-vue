@@ -4,8 +4,8 @@
  * 公共方法
  */
 
-export * from './shapeFlags.ts'
-export * from './judge.ts'
+export * from './judge'
+export {ShapeFlags} from "./constant";
 
 
 

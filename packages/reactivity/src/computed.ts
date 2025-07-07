@@ -6,7 +6,7 @@
 import {isFunction} from "@mini-vue/shared";
 import { ReactivityEffect,} from "./effect";
 import {trackRefValue, triggerRefValue} from "./ref";
-import {ReactivityFlags} from "./constant";
+import {ReactivityFlags} from "../../shared/src/constant";
 
 type ComputedOptions = {
     get: Function,

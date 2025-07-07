@@ -7,8 +7,7 @@
   "scripts": {
     "reactivityDev": "node ./scripts/dev.js reactivity -f esm",
     "runtimeDomDev": "node ./scripts/dev.js runtime-dom -f esm",
-    "runtimeCoreDev": "node ./scripts/dev.js runtime-core -f esm",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "runtimeCoreDev": "node ./scripts/dev.js runtime-core -f esm"
   },
   "keywords": [],
   "author": "",
