@@ -5,15 +5,24 @@
     <title>Title</title>
 </head>
 <body>
-
+<h1 id="cj">
+    header
+    <p>main</p>
+    footer
+</h1>
 </body>
 <script type="module">
   import { h, createRenderer } from '../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
 
   console.log(createRenderer)
 
-  const el = h('div', { style: { color: 'red' }, onClick: () => alert(123) }, '123','8888')
-  console.log(el)
+  // const el = h('div', { style: { color: 'red' }, onClick: () => alert(123) }, '123','8888')
+  // console.log(el)
+
+  setTimeout(() => {
+    document.getElementById('cj').textContent = ''
+
+  }, 2000)
 
   const vnode = {
     '__v_isVNode': true,

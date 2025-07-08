@@ -4,7 +4,7 @@
  *
  */
 
-import {isString, ShapeFlags} from "@mini-vue/shared";
+import {isArr, isString, ShapeFlags} from "@mini-vue/shared";
 import {isSameVNode} from "./vNode";
 
 export interface createRendererOptions {
@@ -71,7 +71,7 @@ export function createRenderer(options: createRendererOptions) {
 
         // 前后两次虚拟dom变了(type或key变了); 就删除老dom,重新渲染新dom
         if (preVNode && !isSameVNode(preVNode, newVNode)) {
-            unMount(preVNode.el)
+            unMount(preVNode)
             preVNode = null
         }
 
@@ -171,13 +171,79 @@ export function createRenderer(options: createRendererOptions) {
         patchChildren({vNode1, vNode2, children1, children2})
     }
 
+
+    //  老: text, 新: text
+    //  老: arr, 新: text
+    //  老: null, 新: text
+    //  老: text, 新: arr
+    //  老: arr, 新: arr
+    //  老: null, 新: arr
+    //  老: text, 新: null
+    //  老: arr, 新: null
+    //  老: null, 新: null
+
+    // 合并之后:
+    // 老: text,null; 新: text
+    //  老: arr, 新: text,null
+    //  老: text, 新: arr
+    //  老: arr, 新: arr
+    //  老: null, 新: arr
+    //  老: text,null, 新: null
     const patchChildren = ({vNode1, vNode2, children1, children2}) => {
+        if (!vNode1 || !vNode2) return
+
+        const el = vNode2.el
+        const preShapeFlag = vNode1.shapeFlag
+        const shapeFlag = vNode2.shapeFlag
+
+        // 新的是text
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            // 老的是文本, 要删除老的
+            if (preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                // 删除老数组
+                unMountChildren(children1)
+            }
+            if (children1 !== children2) {
+                hostSetElementText(el, children2)
+            }
+        } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+            // 新的是数组
+            // 老的也是数组
+            if (preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                // diff算法
+
+
+            } else {
+                // 老的是null或text
+                // 老的是text
+                if (preShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+                    hostSetElementText(el, null)
+                }
+                mountedChildren(el, children2)
+            }
+        } else {
+            // 新的是null
+            // 老的是数组
+            if (preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                unMountChildren(children1)
+            } else if (preShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+                // 老的是text
+                hostSetElementText(el, null)
+            }
+        }
 
 
     }
 
-    const unMount = (vNode) => {
-        hostRemove(vNode.el)
+    const unMount = (vnode) => {
+        hostRemove(vnode.el)
+    }
+
+    const unMountChildren = (children) => {
+        if (!isArr(children)) return
+        for (let i = 0; i < children.length; i++) {
+            unMount(children[i])
+        }
     }
 
 

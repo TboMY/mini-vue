@@ -40,6 +40,10 @@ export function isNil(val: any) {
     return val === null || val === undefined
 }
 
+export function isDomElement(val: any) {
+    return val instanceof Element || val instanceof HTMLDocument
+}
+
 export function isJustObject(val: any) {
     return !isNil(val) && Object.prototype.toString.call(val) === '[object Object]'
 }
