@@ -77,11 +77,11 @@ export function createRenderer(options: createRendererOptions) {
 
         // 初次渲染
         if (!preVNode) {
-            return mountedElement(newVNode, container)
+            return mountedElement(newVNode, container, refer)
         } else {
             // 两个虚拟dom的key和type都没变;
             // 就要复用原来的真实dom; 更新其属性和children
-            patchElement(preVNode, newVNode)
+            return patchElement(preVNode, newVNode)
         }
 
 
@@ -92,10 +92,10 @@ export function createRenderer(options: createRendererOptions) {
      * @param vNode
      * @param container
      */
-    const mountedElement = (vNode, container) => {
+    const mountedElement = (vNode, container, refer) => {
         const {type, props, children, shapeFlag} = vNode
         const mountedEl = vNode.el = hostCreateElement(type)
-        hostInsert(mountedEl, container)
+        hostInsert(mountedEl, container, refer)
         props && setProps(mountedEl, null, props)
 
         // 这里通过位运算判断children的类型; 类似前端组件权限控制的方式
@@ -161,7 +161,7 @@ export function createRenderer(options: createRendererOptions) {
         // 老的有,新的没有要删除
         for (const key in props1) {
             if (!(key in props2)) {
-                hostPatchProp(el, key, props1[key], props2[key])
+                hostPatchProp(el, key, props1[key], null)
             }
         }
 
@@ -211,8 +211,7 @@ export function createRenderer(options: createRendererOptions) {
             // 老的也是数组
             if (preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                 // diff算法
-
-
+                patchKeyedChildren(children1, children2, el)
             } else {
                 // 老的是null或text
                 // 老的是text
@@ -231,6 +230,80 @@ export function createRenderer(options: createRendererOptions) {
                 hostSetElementText(el, null)
             }
         }
+
+
+    }
+
+
+    const patchKeyedChildren = (children1, children2, el) => {
+        let i = 0
+        let e1 = children1.length - 1
+        let e2 = children2.length - 1
+
+
+        // 先从头找相同的, 比如:
+        // oldChildren: a b c d
+        // newChildren: a b e d
+        // 对于a,b; 相同,会让他们patch, i停到2
+        while (i <= e1 && i <= e2) {
+            const c1 = children1[i]
+            const c2 = children2[i]
+            if (isSameVNode(c1, c2)) {
+                patch(c1, c2, el, null)
+            } else {
+                break
+            }
+            i++
+        }
+
+        // 再从尾找相同的, 比如:
+        // oldChildren: a b c d
+        // newChildren: a b e d
+        // 对于d; 会让他们patch, 但是i还是停到第一个不相等的索引(从头开始数); e1,e2停到第一个不相等的索引(从尾开始数)
+        // 当然i,e1,e2也可能是不符(i <= e1 && i <= e2)而停
+        while (i <= e1 && i <= e2) {
+            const c1 = children1[e1]
+            const c2 = children2[e2]
+            if (isSameVNode(c1, c2)) {
+                patch(c1, c2, el, null)
+            } else {
+                break
+            }
+            e1--;
+            e2--;
+        }
+
+        // 如果新的children比老的多;
+        // 并且只是在尾部或头部插入(就是说中间的都相等: 比如 abc->abcd; 或者 abc-> eabc;)
+        // 会满足条件: i>e1&&i<=e2
+        if (i > e1) {
+            if (i <= e2) {
+                // 判断是头插还是尾插
+                // 如果是头插, e2指向的是要插入链表的最后一个,也是原链表的前一个(比如abc-> xyeabc; e2最后指向的是e, 是'xye'最后一个, 是'abc'的前一个)
+                // 所以头插的话, 拿到e2的下一个节点, 是有节点的; 如果是尾插,e2下一个是没有的)
+                const next = e2 + 1
+                // 直接再获取el, hostInsert如果refer为undefined即为尾插, 否则为往refer前面插入
+                const refer = children1[next]?.el
+                while (i <= e2) {
+                    const node = children2[i]
+                    hostInsert(node.el, el, refer)
+                    i++
+                }
+            }
+        }
+        // 同样的, 如果是从多到少, 满足条件(i>e2&&i<=e1);   前提是除了少了的几个,其他都没变,可能从前面或后面少,比如(abc->bc; abcd-> ab)
+        else if (i > e2) {
+            if (i <= e1) {
+                while (i <= e1) {
+                    unMount(children1[i])
+                    i++
+                }
+            }
+        }
+
+        // 剩下的情况就是: 中间的乱序了, 两头可能有相同或没有相同的;
+        // 之所以对上面的两种情况特殊处理;
+        // 是因为平常在头部或尾部插入若干dom比较常见, 头部尾部插入若干dom也比较常见
 
 
     }
