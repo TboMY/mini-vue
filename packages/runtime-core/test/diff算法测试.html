@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script type="module">
+  import { render, h } from '../../runtime-dom/dist/runtime-dom.js'
+
+  // prenode
+  // a b e c d h
+  const preVNode = h('div',
+    [
+      h('p', { key: 'a' }, 'a'),
+      h('p', { key: 'b' }, 'b'),
+      h('p', { key: 'e' }, 'e'),
+      h('p', { key: 'c' }, 'c'),
+      h('p', { key: 'd' }, 'd'),
+      h('p', { key: 'h' }, 'h') ]
+  )
+
+  // newnode
+  // a b c d e g h
+  const newVNode = h('div',
+    [
+      h('p', { key: 'a' }, 'a'),
+      h('p', { key: 'b' }, 'b'),
+      h('p', { key: 'c' }, 'c'),
+      h('p', { key: 'd' }, 'd'),
+      h('p', { key: 'e' }, 'e'),
+      h('p', { key: 'g' }, 'g'),
+      h('p', { key: 'h' }, 'h') ]
+  )
+
+  render.render(preVNode, document.body)
+  setTimeout(() => {
+    render.render(newVNode, document.body)
+  }, 2000)
+
+</script>
+</html>

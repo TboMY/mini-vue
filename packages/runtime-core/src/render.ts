@@ -210,7 +210,7 @@ export function createRenderer(options: createRendererOptions) {
             // 新的是数组
             // 老的也是数组
             if (preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-                // diff算法
+                // 全量diff算法
                 patchKeyedChildren(children1, children2, el)
             } else {
                 // 老的是null或text
@@ -286,7 +286,7 @@ export function createRenderer(options: createRendererOptions) {
                 const refer = children1[next]?.el
                 while (i <= e2) {
                     const node = children2[i]
-                    hostInsert(node.el, el, refer)
+                    patch(null, node, el, refer)
                     i++
                 }
             }
@@ -301,12 +301,145 @@ export function createRenderer(options: createRendererOptions) {
             }
         }
 
-        // 剩下的情况就是: 中间的乱序了, 两头可能有相同或没有相同的;
         // 之所以对上面的两种情况特殊处理;
         // 是因为平常在头部或尾部插入若干dom比较常见, 头部尾部插入若干dom也比较常见
+        // 剩下的情况就是: 中间的乱序了, 两头可能有相同或没有相同的;
 
+        let s1 = i
+        let s2 = i
 
+        // 选取新children的乱序段为基准, 记录每个key对应的数组索引
+        const keyToNewIndexMap = new Map()
+
+        // 新children里面,有多少乱序的, 需要diff算法
+        const willPatchedAmount = e2 - i + 1;
+
+        // 用来存新序列的这段乱序片段中, 每个节点在老的乱序片段中的索引
+        // 比如 old: a b e c d g; new: a b c d e h g
+        // 那么 现在乱序片段就是 ecd->cdeh
+        // 那么这个数组长度是4, 应该为[3,4,2,0]; 其中0表示在原片段中不存在(比如这个h不存在)
+        // 但是为了避免0的异议, (即如果前面都不相同: e c d g=>c d e h g),那么这个0有异议, 所以实际存的值是索引+1
+        const newIndexToOldMapIndex = Array(willPatchedAmount).fill(0)
+        // init map
+        for (let i = s2; i <= e2; i++) {
+            const child = children2[i]
+            keyToNewIndexMap.set(child.key, i)
+        }
+
+        for (let i = s1; i <= e1; i++) {
+            const oldVNode = children1[i]
+            const newIndex = keyToNewIndexMap.get(oldVNode.key)
+            // 说明老的要被删除
+            if (newIndex === undefined) {
+                unMount(oldVNode)
+            }
+            // 说明新老数组中都有这个node,可以复用, 直接patch
+            else {
+                // newIndex - s2即这个新节点的索引相对于children2乱序片段的开始的索引
+                // i + 1 : children1中的实际索引+1, 避免与索引0混淆
+                newIndexToOldMapIndex[newIndex - s2] = i + 1
+                patch(oldVNode, children2[newIndex], el, null)
+            }
+        }
+        debugger
+        console.log('newIndexToOldMapIndex', newIndexToOldMapIndex)
+
+        // 寻找最长递增子序列
+        const increasingSequence = getSequence(newIndexToOldMapIndex)
+        console.log('寻找最长递增子序列', increasingSequence)
+        let j = increasingSequence.length - 1;
+
+        for (let i = willPatchedAmount - 1; i >= 0; i--) {
+            const index = s2 + i
+            const current = children2[index]
+            // 因为插入的时候, 只提供了往refer前面插入的方法;
+            // 如果refer为null, 相当于appendChild
+            const refer = index + 1 < children2.length ? children2[index + 1].el : null
+
+            // 说明是老children中没有的,需要新增
+            if (newIndexToOldMapIndex[i] === 0) {
+                patch(null, current, el, refer)
+            } else {
+                // 因为increasingSequence存的也是索引,(存的时候+1了)
+                // 说明当前节点可以不用动,直接跳过
+                if (increasingSequence[j] === index + 1) {
+                    j--
+                } else {
+                    hostInsert(current.el, el, refer)
+                }
+            }
+        }
     }
+
+    // 网上博客讲解
+    // https://www.cnblogs.com/burc/p/17964032
+    const getSequence = (indexArr) => {
+        if (!indexArr || indexArr.length === 0) return
+
+        let len = indexArr.length
+        let left;
+        let high;
+        let middle;
+        // 最后返回的数组中的元素, 也是表示的索引, 索引0是一定存在的;
+        // 这个索引是传入的arr的索引, 而不是其元素的值;
+        // 相当于是arr中元素值的映射而已, 用这个元素在arr中的索引来代表这个元素
+        const result = [0]
+
+        // 记录这个节点的上一个节点的索引
+        // 其实就是一个回溯表
+        const pre = Array(len).fill(null)
+
+        for (let i = 0; i < len; i++) {
+            const index = indexArr[i]
+            // 值为0表示老children中, 没有这个新节点, 只能创建
+            if (index === 0) continue
+
+            const resultLastIndex = result.at(-1)
+            if (index > indexArr[resultLastIndex]) {
+                // 这里最后push一个元素, 之前的lastIndex就成为了上一个元素
+                // 即此时遍历到indexArr中第i个元素, 我们说indexArr[i]的上一个node是indexArr[result.length-1]
+                // 但是此时的i和result中存的值都不过是索引, 所以是一种映射, 比较抽象
+                pre[i] = resultLastIndex
+                result.push(i)
+                continue
+            }
+
+            // 去二分查找, 找当前的i应该替换result中哪一个索引的值
+            left = 0
+            high = result.length - 1
+            while (left < high) {
+                middle = ((left + high) / 2) | 0
+                if (indexArr[result[middle]] < index) {
+                    left = middle + 1
+                } else {
+                    high = middle
+                }
+            }
+            // todo 验证此时left,high应该相等
+            // todo 这里为什么要if判断, 不是必然成立的吗?
+            if (index < indexArr[result[left]]) {
+                // 这里进行替换, 虽然可能导致最后的结果顺序不对,但是个数是对的, 最后用pre进行回溯
+                result[left] = i
+                // 记住前一个是谁
+                pre[i] = result[left - 1]
+            }
+        }
+
+        // 进行回溯, 调整顺序,
+        // 倒序是因为最后一位一定是确定的, 一定是最大的那一个
+        // 不是说这个最大的是indexArr中最大的, 而是无论它是多少, 一定是这个递增子序列中最大的, 所以倒序
+        let resultLen = result.length
+        let last = result[resultLen - 1]
+        while (resultLen > 0) {
+            resultLen--
+            // result中存的是indexArr的索引,
+            result[resultLen] = last
+            // pre中存的是,这个indexArr的索引的上一个节点应该是谁
+            last = pre[last]
+        }
+        return result
+    }
+
 
     const unMount = (vnode) => {
         hostRemove(vnode.el)
