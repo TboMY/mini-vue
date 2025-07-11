@@ -3,7 +3,7 @@
  * @Date: 2025/7/7 09:04
  *
  */
-import {isArr, isObject} from "@mini-vue/shared";
+import {isArr, isObject, RuntimeFlags} from "@mini-vue/shared";
 import {createVNode, isVNode} from "./vNode";
 
 
@@ -16,9 +16,12 @@ import {createVNode, isVNode} from "./vNode";
  * @param propsOrChildren
  * @param children
  */
-export function h(type: string, propsOrChildren?: object | Array<any>, children?: Array<object | string>[]) {
+export function h(type: string | symbol, propsOrChildren?: object | Array<any>, children?: Array<object | string>[]) {
     const len = arguments.length
-    if (!type || len <= 1) return createVNode(type, null, null)
+
+    if (!type) {
+        type = RuntimeFlags.Nil
+    }
 
     // debugger
 

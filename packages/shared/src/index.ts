@@ -5,7 +5,7 @@
  */
 
 export * from './judge'
-export {ShapeFlags} from "./constant";
+export * from "./constant";
 
 
 

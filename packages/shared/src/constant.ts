@@ -32,5 +32,8 @@ export enum ShapeFlags {
 }
 
 export const RuntimeFlags = {
-    IS_V_NODE: Symbol('__v_is_v_node')
+    IS_V_NODE: Symbol('__v_is_v_node'),
+    Text: Symbol('v_text'),
+    Nil: Symbol('v_nil')
 }
+

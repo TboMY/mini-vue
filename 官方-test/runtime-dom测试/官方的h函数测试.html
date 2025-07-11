@@ -7,7 +7,7 @@
 <body>
 </body>
 <script type="module">
-  import { h, createRenderer } from '../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+  import { h, createRenderer, Text } from '../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
 
   const preVNode = h('div',
     [
@@ -23,6 +23,14 @@
 
   const node2 = h(null, '我是文本节点')
   console.log('node2', node2)
+
+  // 创建text节点
+  const text_ = h(Text, 'cjcjcjc')
+  console.log('text_', text_)
+
+  const null_ = h(null, 'cjcjcjc')
+  console.log('null_', null_)
+
 
 </script>
 </html>

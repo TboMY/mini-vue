@@ -4,8 +4,9 @@
  *
  */
 
-import {isArr, isString, ShapeFlags} from "@mini-vue/shared";
+import {isArr, isNil, isString, ShapeFlags} from "@mini-vue/shared";
 import {isSameVNode} from "./vNode";
+import {RuntimeFlags} from "packages/shared/src/constant";
 
 export interface createRendererOptions {
     insert: (el: Node, parent: Node, refer?: Node) => void;
@@ -14,7 +15,7 @@ export interface createRendererOptions {
     createElement: (type: string) => Element;
     createText: (text: string) => Text;
     createComment: (text: string) => Comment;
-    // setText: (node: Text, text: string) => void;
+    setText: (node: Text, text: string) => void;
     setElementText: (el: Element, text: string) => void;
     parentNode: (node: Node) => Node | null;
     nextSibling: (node: Node) => Node | null;
@@ -32,7 +33,7 @@ export function createRenderer(options: createRendererOptions) {
         createElement: hostCreateElement,
         createText: hostCreateText,
         createComment: hostCreateComment,
-        // setText: hostSetText,
+        setText: hostSetText,
         setElementText: hostSetElementText,
         parentNode: hostParentNode,
         nextSibling: hostNextSibling,
@@ -48,7 +49,13 @@ export function createRenderer(options: createRendererOptions) {
     const render = (vNode, container) => {
         // debugger
 
-        // 如果第一次渲染,preVNode为null
+        if (isNil(vNode)) {
+            const preVNode = container._vnode
+            preVNode && unMount(preVNode)
+            return
+        }
+
+        // 当第一次渲染一个vnode,preVNode为null
         patch(container._vnode || null, vNode, container, null)
 
         // _vnode表示这个container之前渲染的vnode, 如果没有表示是第一次渲染
@@ -75,6 +82,33 @@ export function createRenderer(options: createRendererOptions) {
             preVNode = null
         }
 
+        const {type} = newVNode
+        switch (type) {
+            case RuntimeFlags.Text:
+                processText(preVNode, newVNode, container)
+                break
+            default:
+                processElement(preVNode, newVNode, container, refer)
+        }
+
+
+    }
+
+    const processText = (preVNode, newVNode, container) => {
+        if (!preVNode) {
+            const textNode = hostCreateText(newVNode.children)
+            newVNode.el = textNode
+            hostInsert(textNode, container)
+        } else {
+            const el = newVNode.el = preVNode.el
+            if (preVNode.children !== newVNode.children) {
+                hostSetText(el, newVNode.children)
+            }
+        }
+    }
+
+
+    const processElement = (preVNode, newVNode, container, refer) => {
         // 初次渲染
         if (!preVNode) {
             return mountedElement(newVNode, container, refer)
@@ -83,8 +117,6 @@ export function createRenderer(options: createRendererOptions) {
             // 就要复用原来的真实dom; 更新其属性和children
             return patchElement(preVNode, newVNode)
         }
-
-
     }
 
     /**
@@ -229,12 +261,10 @@ export function createRenderer(options: createRendererOptions) {
                 hostSetElementText(el, null)
             }
         }
-
-
     }
 
 
-    const patchKeyedChildren = (children1, children2, el) => {
+    const patchKeyedChildren = (children1, children2, container) => {
         // debugger
         let i = 0
         let e1 = children1.length - 1
@@ -249,7 +279,7 @@ export function createRenderer(options: createRendererOptions) {
             const c1 = children1[i]
             const c2 = children2[i]
             if (isSameVNode(c1, c2)) {
-                patch(c1, c2, el, null)
+                patch(c1, c2, container, null)
             } else {
                 break
             }
@@ -265,7 +295,7 @@ export function createRenderer(options: createRendererOptions) {
             const c1 = children1[e1]
             const c2 = children2[e2]
             if (isSameVNode(c1, c2)) {
-                patch(c1, c2, el, null)
+                patch(c1, c2, container, null)
             } else {
                 break
             }
@@ -286,7 +316,7 @@ export function createRenderer(options: createRendererOptions) {
                 const refer = children1[next]?.el
                 while (i <= e2) {
                     const node = children2[i]
-                    patch(null, node, el, refer)
+                    patch(null, node, container, refer)
                     i++
                 }
             }
@@ -341,7 +371,7 @@ export function createRenderer(options: createRendererOptions) {
                 // 每个值代表children2中每个元素在children1对应的位置,
                 // 目的就是让能不动的dom尽量不动,(最长递增子序列并不是要求相邻), 新值删除其中间的dom最后也能达成最长递增子序列dom不动
                 newIndexToOldMapIndex[newIndex - s2] = i + 1
-                patch(oldVNode, children2[newIndex], el, null)
+                patch(oldVNode, children2[newIndex], container, null)
             }
         }
         // debugger
@@ -361,7 +391,7 @@ export function createRenderer(options: createRendererOptions) {
 
             // 说明是老children中没有的,需要新增
             if (newIndexToOldMapIndex[i] === 0) {
-                patch(null, current, el, refer)
+                patch(null, current, container, refer)
             } else {
                 // 因为increasingSequence存的也是索引,(存的时候+1了)
                 // 说明当前节点可以不用动,直接跳过
@@ -373,7 +403,7 @@ export function createRenderer(options: createRendererOptions) {
                 if (increasingSequence[j] === i) {
                     j--
                 } else {
-                    hostInsert(current.el, el, refer)
+                    hostInsert(current.el, container, refer)
                 }
             }
         }

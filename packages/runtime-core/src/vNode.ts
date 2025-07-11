@@ -7,7 +7,7 @@
 import {isArr, isNil, isObject, isString, ShapeFlags} from "@mini-vue/shared";
 import {RuntimeFlags} from "packages/shared/src/constant";
 
-export const createVNode = (type?: string, props?: any, children?: any) => {
+export const createVNode = (type?: string | symbol, props?: any, children?: any) => {
 
     const vNodeShapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0
     const shapeFlag = vNodeShapeFlag | getChildrenShapeFlag(children)

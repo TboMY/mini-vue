@@ -17,6 +17,7 @@ export const nodeOps = {
     createElement: (type: string) => document.createElement(type),
     createText: (str: string) => document.createTextNode(str),
     createComment: (str: string) => document.createComment(str),
+    setText: (node, text: string) => node && (node.nodeValue = text),
     setElementText: (el: Node, text: string) => el && (el.textContent = text),
     parentNode: (el: Node) => el && el.parentNode,
     nextSibling: (el: Node) => el && el.nextSibling
