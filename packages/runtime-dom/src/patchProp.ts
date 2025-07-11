@@ -10,6 +10,9 @@ import patchAttr from "./modules/patchAttr";
 
 // 暂时只有 class, style, event(原生)
 export const patchProp = function (el: Element, prop: string, preValue: any, newValue: any) {
+    // todo 感觉如果prop='key', 要直接跳过, 不渲染倒dom上
+    if ('key' === prop) return
+
     if ('class' === prop) {
         patchClass(el, newValue)
     } else if ('style' === prop) {

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+</body>
+<script type="module">
+  import { h, createRenderer, render } from '../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+
+  console.log(createRenderer)
+
+  const el = h('div', { aaa: '123111', style: { color: 'red' }, onClick: () => alert(123) }, '123', '8888')
+  console.log(el)
+
+  render(el, document.body)
+
+</script>
+</html>

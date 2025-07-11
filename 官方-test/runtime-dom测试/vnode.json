@@ -1,0 +1,33 @@
+{
+  "__v_isVNode": true,
+  "__v_skip": true,
+  "type": "div",
+  "props": {
+    "style": {
+      "color": "red"
+    }
+  },
+  "key": null,
+  "ref": null,
+  "scopeId": null,
+  "slotScopeIds": null,
+  "children": "123",
+  "component": null,
+  "suspense": null,
+  "ssContent": null,
+  "ssFallback": null,
+  "dirs": null,
+  "transition": null,
+  "el": null,
+  "anchor": null,
+  "target": null,
+  "targetStart": null,
+  "targetAnchor": null,
+  "staticCount": 0,
+  "shapeFlag": 9,
+  "patchFlag": 0,
+  "dynamicProps": null,
+  "dynamicChildren": null,
+  "appContext": null,
+  "ctx": null
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+</body>
+<script type="module">
+  import { h, createRenderer } from '../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+
+  const preVNode = h('div',
+    [
+      h('h2', { key: 'a' }, 'a'),
+      h('h2', { key: 'b' }, 'b'),
+      h('h2', { key: 'e' }, 'e'),
+      h('h2', { key: 'c' }, 'c'),
+      h('h2', { key: 'd' }, 'd'),
+      h('h2', { key: 'h' }, 'h') ]
+  )
+
+  console.log('preVNode', preVNode)
+
+  const node2 = h(null, '我是文本节点')
+  console.log('node2', node2)
+
+</script>
+</html>

@@ -198,7 +198,6 @@ export function createRenderer(options: createRendererOptions) {
 
         // 新的是text
         if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
-            // 老的是文本, 要删除老的
             if (preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                 // 删除老数组
                 unMountChildren(children1)
@@ -236,6 +235,7 @@ export function createRenderer(options: createRendererOptions) {
 
 
     const patchKeyedChildren = (children1, children2, el) => {
+        // debugger
         let i = 0
         let e1 = children1.length - 1
         let e2 = children2.length - 1
@@ -317,7 +317,7 @@ export function createRenderer(options: createRendererOptions) {
         // 用来存新序列的这段乱序片段中, 每个节点在老的乱序片段中的索引
         // 比如 old: a b e c d g; new: a b c d e h g
         // 那么 现在乱序片段就是 ecd->cdeh
-        // 那么这个数组长度是4, 应该为[3,4,2,0]; 其中0表示在原片段中不存在(比如这个h不存在)
+        // 那么这个数组长度是4, 结果应该为[3,4,2,0];比如第一个3表示c在old中的索引是3; 其中0表示在原片段中不存在(比如这个h不存在)
         // 但是为了避免0的异议, (即如果前面都不相同: e c d g=>c d e h g),那么这个0有异议, 所以实际存的值是索引+1
         const newIndexToOldMapIndex = Array(willPatchedAmount).fill(0)
         // init map
@@ -337,11 +337,14 @@ export function createRenderer(options: createRendererOptions) {
             else {
                 // newIndex - s2即这个新节点的索引相对于children2乱序片段的开始的索引
                 // i + 1 : children1中的实际索引+1, 避免与索引0混淆
+                // 这个数组相当于索引代表的是children2乱序片段中的每个元素,
+                // 每个值代表children2中每个元素在children1对应的位置,
+                // 目的就是让能不动的dom尽量不动,(最长递增子序列并不是要求相邻), 新值删除其中间的dom最后也能达成最长递增子序列dom不动
                 newIndexToOldMapIndex[newIndex - s2] = i + 1
                 patch(oldVNode, children2[newIndex], el, null)
             }
         }
-        debugger
+        // debugger
         console.log('newIndexToOldMapIndex', newIndexToOldMapIndex)
 
         // 寻找最长递增子序列
@@ -362,7 +365,12 @@ export function createRenderer(options: createRendererOptions) {
             } else {
                 // 因为increasingSequence存的也是索引,(存的时候+1了)
                 // 说明当前节点可以不用动,直接跳过
-                if (increasingSequence[j] === index + 1) {
+                // 这里的判断条件要注意:
+                // 1. 返回的increasingSequence里面存的是传入值newIndexToOldMapIndex数组的索引
+                // 2. 传入值newIndexToOldMapIndex数组的长度, 是和children2乱序片段的长度对应的,
+                //     比如 old: a b e c d g; new: a b c d e h g; newIndexToOldMapIndex长度为4, 对应c d e h
+                // 3. 所以这里是和i比较, 循环是倒序循环, 变量j也是倒序从increasingSequence倒序
+                if (increasingSequence[j] === i) {
                     j--
                 } else {
                     hostInsert(current.el, el, refer)
@@ -383,11 +391,12 @@ export function createRenderer(options: createRendererOptions) {
         // 最后返回的数组中的元素, 也是表示的索引, 索引0是一定存在的;
         // 这个索引是传入的arr的索引, 而不是其元素的值;
         // 相当于是arr中元素值的映射而已, 用这个元素在arr中的索引来代表这个元素
+        // 默认indexArr中第一个元素最小, 即其索引为0
         const result = [0]
 
         // 记录这个节点的上一个节点的索引
         // 其实就是一个回溯表
-        const pre = Array(len).fill(null)
+        const pre = Array(len).fill(undefined)
 
         for (let i = 0; i < len; i++) {
             const index = indexArr[i]
@@ -416,7 +425,7 @@ export function createRenderer(options: createRendererOptions) {
                 }
             }
             // todo 验证此时left,high应该相等
-            // todo 这里为什么要if判断, 不是必然成立的吗?
+            // 这里是跳过相等的情况, 比如result=[0]时, 此时i也=0
             if (index < indexArr[result[left]]) {
                 // 这里进行替换, 虽然可能导致最后的结果顺序不对,但是个数是对的, 最后用pre进行回溯
                 result[left] = i

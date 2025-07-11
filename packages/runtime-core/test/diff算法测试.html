@@ -14,29 +14,30 @@
   // a b e c d h
   const preVNode = h('div',
     [
-      h('p', { key: 'a' }, 'a'),
-      h('p', { key: 'b' }, 'b'),
-      h('p', { key: 'e' }, 'e'),
-      h('p', { key: 'c' }, 'c'),
-      h('p', { key: 'd' }, 'd'),
-      h('p', { key: 'h' }, 'h') ]
+      h('h2', { key: 'a' }, 'a'),
+      h('h2', { key: 'b' }, 'b'),
+      h('h2', { key: 'e' }, 'e'),
+      h('h2', { key: 'c' }, 'c'),
+      h('h2', { key: 'd' }, 'd'),
+      h('h2', { key: 'h' }, 'h') ]
   )
 
   // newnode
   // a b c d e g h
   const newVNode = h('div',
     [
-      h('p', { key: 'a' }, 'a'),
-      h('p', { key: 'b' }, 'b'),
-      h('p', { key: 'c' }, 'c'),
-      h('p', { key: 'd' }, 'd'),
-      h('p', { key: 'e' }, 'e'),
-      h('p', { key: 'g' }, 'g'),
-      h('p', { key: 'h' }, 'h') ]
+      h('h2', { key: 'a' }, 'a'),
+      h('h2', { key: 'b' }, 'b'),
+      h('h2', { key: 'c' }, 'c'),
+      h('h2', { key: 'd' }, 'd'),
+      h('h2', { key: 'e' }, 'e'),
+      h('h2', { key: 'g' }, 'g'),
+      h('h2', { key: 'h' }, 'h') ]
   )
 
   render.render(preVNode, document.body)
   setTimeout(() => {
+    console.log('定时器')
     render.render(newVNode, document.body)
   }, 2000)
 

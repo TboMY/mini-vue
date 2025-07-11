@@ -25,7 +25,7 @@ export function h(type: string, propsOrChildren?: object | Array<any>, children?
     if (len >= 3) {
         // const isVaildProps = isNil(propsOrChildren) || isObject(propsOrChildren)
         // if (!isVaildProps) throw new Error('props不合法')
-        children = Array.prototype.slice.call(arguments, 2)
+        children = len === 3 ? arguments[2] : Array.prototype.slice.call(arguments, 2)
         return createVNode(type, propsOrChildren, children)
     } else {
         if (isObject(propsOrChildren) && !isArr(propsOrChildren)) {
