@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+</body>
+</html>
+
+<script type="module">
+  // import {
+  //   h,
+  //   createRenderer,
+  //   render,
+  //   Fragment
+  // } from '../node_modules/vue/dist/vue.esm-browser.js'
+
+  import {
+    h,
+    render,
+    Fragment
+  } from '../../runtime-dom/dist/runtime-dom.js'
+
+  // 用官方的和自己的进行对比测试
+
+  const VueComponent = {
+    data () {
+      return {
+        a: 1
+      }
+    },
+    render () {
+
+      return h(Fragment, { style: { color: 'red' } }, '我是subTree的text', h('h1', '我是h1111'))
+    }
+  }
+
+  const component = h(VueComponent)
+  console.log(component)
+
+  // render(h(VueComponent), document.body)
+  render.render(h(VueComponent), document.body)
+
+
+</script>

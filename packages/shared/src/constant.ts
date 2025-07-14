@@ -38,3 +38,7 @@ export const RuntimeFlags = {
     Fragment: Symbol('v_fragment')
 }
 
+export const Text = RuntimeFlags.Text
+export const Nil = RuntimeFlags.Nil
+export const Fragment = RuntimeFlags.Fragment
+

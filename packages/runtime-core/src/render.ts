@@ -7,6 +7,7 @@
 import {isArr, isNil, isString, ShapeFlags} from "@mini-vue/shared";
 import {isSameVNode} from "./vNode";
 import {RuntimeFlags} from "packages/shared/src/constant";
+import {reactive, ReactivityEffect} from "@mini-vue/reactivity";
 
 export interface createRendererOptions {
     insert: (el: Node, parent: Node, refer?: Node) => void;
@@ -82,13 +83,15 @@ export function createRenderer(options: createRendererOptions) {
             preVNode = null
         }
 
+        // debugger
+
         // todo: 确定了的bug, 如果创建的h函数为: h('div',null, '我是text1', h('h1', '我是h1'), h('h2', '我是h2'), '我是text2' )
         // 那么无法正常渲染, 因为setElementText调用的是textContent, 会直接覆盖, 最后只渲染'我是text2'
 
         // todo: 确定了的bug, unmountChildren方法, 对于children数组中有string的情况, 删除不了
 
         // todo: patchKeyedChildren方法, 对于都没有key的情况(都是undefined),有问题
-        const {type} = newVNode
+        const {type, shapeFlag} = newVNode
         switch (type) {
             case RuntimeFlags.Text:
                 processText(preVNode, newVNode, container)
@@ -98,7 +101,13 @@ export function createRenderer(options: createRendererOptions) {
                 break
             default:
                 // debugger
-                processElement(preVNode, newVNode, container, refer)
+                if (shapeFlag & ShapeFlags.ELEMENT) {
+                    processElement(preVNode, newVNode, container, refer)
+                }
+                // ShapeFlags.COMPONENT 包括函数组件和状态组件
+                else if (shapeFlag & ShapeFlags.COMPONENT) {
+                    processComponent(preVNode, newVNode, container, refer)
+                }
         }
 
 
@@ -136,6 +145,16 @@ export function createRenderer(options: createRendererOptions) {
             return patchElement(preVNode, newVNode)
         }
     }
+
+    const processComponent = (preVNode, newVNode, container, refer) => {
+        if (isNil(preVNode)) {
+            mountComponent(newVNode, container, refer)
+        } else {
+
+
+        }
+    }
+
 
     /**
      * 初次渲染,
@@ -497,6 +516,45 @@ export function createRenderer(options: createRendererOptions) {
             last = pre[last]
         }
         return result
+    }
+
+    const mountComponent = (vnode, container, refer) => {
+        debugger
+
+        // type才是组件对象, 因为创建vnode的时候, 是比如 h(VueComponent), VueComponent才是object
+        const {data, render} = vnode.type
+        const state = reactive(data?.() || {})
+
+        const instance = {
+            state,
+            render,
+            update: null,
+            vnode,
+            subTree: null, // 这个组件的children, 非Fragment的子vnode
+            isMounted: false, // 标识符, 如果render里面修改了state, 导致指数爆炸级别的递归次数
+        }
+
+        const updateVueComponent = () => {
+            if (!instance.isMounted) {
+                // render可以传入一个形参(proxy), render里面可以用proxy.age或者this.age
+                instance.subTree = render.call(state, state)
+                instance.isMounted = true
+                patch(null, instance.subTree, container, refer)
+            } else {
+                // render中, 如果修改了state的值,(比如通过定时器), 一般不会这么做, 只是为了测试这个mounted
+
+                const subTree = render.call(state, state)
+                patch(instance.subTree, subTree, container, refer)
+                instance.subTree = subTree
+            }
+        }
+
+        const _effect = new ReactivityEffect(updateVueComponent, () => update())
+
+        const update = instance.update = () => {
+            _effect.run()
+        }
+        update()
     }
 
 
