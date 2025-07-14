@@ -82,12 +82,22 @@ export function createRenderer(options: createRendererOptions) {
             preVNode = null
         }
 
+        // todo: 确定了的bug, 如果创建的h函数为: h('div',null, '我是text1', h('h1', '我是h1'), h('h2', '我是h2'), '我是text2' )
+        // 那么无法正常渲染, 因为setElementText调用的是textContent, 会直接覆盖, 最后只渲染'我是text2'
+
+        // todo: 确定了的bug, unmountChildren方法, 对于children数组中有string的情况, 删除不了
+
+        // todo: patchKeyedChildren方法, 对于都没有key的情况(都是undefined),有问题
         const {type} = newVNode
         switch (type) {
             case RuntimeFlags.Text:
                 processText(preVNode, newVNode, container)
                 break
+            case RuntimeFlags.Fragment:
+                processFragment(preVNode, newVNode, container)
+                break
             default:
+                // debugger
                 processElement(preVNode, newVNode, container, refer)
         }
 
@@ -107,8 +117,16 @@ export function createRenderer(options: createRendererOptions) {
         }
     }
 
+    const processFragment = (preVNode, newVNode, container) => {
+        if (!preVNode) {
+            mountedChildren(container, newVNode.children)
+        } else {
+            patchChildren(preVNode, newVNode, container)
+        }
+    }
 
     const processElement = (preVNode, newVNode, container, refer) => {
+        // debugger
         // 初次渲染
         if (!preVNode) {
             return mountedElement(newVNode, container, refer)
@@ -183,6 +201,7 @@ export function createRenderer(options: createRendererOptions) {
     const patchElement = (vNode1, vNode2) => {
         const props1 = vNode1.props || {}
         const props2 = vNode2.props || {}
+        // children的container
         const el = vNode2.el = vNode1.el
 
         // 新的都保留
@@ -198,9 +217,7 @@ export function createRenderer(options: createRendererOptions) {
         }
 
         // 更新children
-        const children1 = vNode1.children || {}
-        const children2 = vNode2.children || {}
-        patchChildren({vNode1, vNode2, children1, children2})
+        patchChildren(vNode1, vNode2, el)
     }
 
 
@@ -221,10 +238,11 @@ export function createRenderer(options: createRendererOptions) {
     //  老: arr, 新: arr
     //  老: null, 新: arr
     //  老: text,null, 新: null
-    const patchChildren = ({vNode1, vNode2, children1, children2}) => {
+    const patchChildren = (vNode1, vNode2, container) => {
         if (!vNode1 || !vNode2) return
 
-        const el = vNode2.el
+        const children1 = vNode1.children
+        const children2 = vNode2.children
         const preShapeFlag = vNode1.shapeFlag
         const shapeFlag = vNode2.shapeFlag
 
@@ -235,21 +253,21 @@ export function createRenderer(options: createRendererOptions) {
                 unMountChildren(children1)
             }
             if (children1 !== children2) {
-                hostSetElementText(el, children2)
+                hostSetElementText(container, children2)
             }
         } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
             // 新的是数组
             // 老的也是数组
             if (preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                 // 全量diff算法
-                patchKeyedChildren(children1, children2, el)
+                patchKeyedChildren(children1, children2, container)
             } else {
                 // 老的是null或text
                 // 老的是text
                 if (preShapeFlag & ShapeFlags.TEXT_CHILDREN) {
-                    hostSetElementText(el, null)
+                    hostSetElementText(container, null)
                 }
-                mountedChildren(el, children2)
+                mountedChildren(container, children2)
             }
         } else {
             // 新的是null
@@ -258,7 +276,7 @@ export function createRenderer(options: createRendererOptions) {
                 unMountChildren(children1)
             } else if (preShapeFlag & ShapeFlags.TEXT_CHILDREN) {
                 // 老的是text
-                hostSetElementText(el, null)
+                hostSetElementText(container, null)
             }
         }
     }
@@ -370,6 +388,8 @@ export function createRenderer(options: createRendererOptions) {
                 // 这个数组相当于索引代表的是children2乱序片段中的每个元素,
                 // 每个值代表children2中每个元素在children1对应的位置,
                 // 目的就是让能不动的dom尽量不动,(最长递增子序列并不是要求相邻), 新值删除其中间的dom最后也能达成最长递增子序列dom不动
+
+                // debugger
                 newIndexToOldMapIndex[newIndex - s2] = i + 1
                 patch(oldVNode, children2[newIndex], container, null)
             }
@@ -484,6 +504,7 @@ export function createRenderer(options: createRendererOptions) {
         hostRemove(vnode.el)
     }
 
+    // todo 这里的卸载应该是有问题的, 因为children中, vnode和string都有, 如果是string, 这个unmount没用
     const unMountChildren = (children) => {
         if (!isArr(children)) return
         for (let i = 0; i < children.length; i++) {

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+<script type="module">
+  import { render, h, RuntimeFlags } from '../../runtime-dom/dist/runtime-dom.js'
+
+  // 测试unmountChildren的bug(删除不了children中的string)
+  // const el_1 = h('div', [ '我是text1', h('h1', '我是h1'), h('h2', '我是h2') ])
+  const el_1 = h('div', [ h('h1', '我是h1'), h('h2', '我是h2') ])
+  console.log('el_1', el_1)
+
+  // const el_2 = h('div', [ h('h3', '我是h3333333') ])
+  const el_2 = h('div', [ h('h3', '我是h3333333') ])
+  console.log('el_2', el_2)
+
+  render.render(el_1, document.body)
+
+  setTimeout(() => {
+    render.render(el_2, document.body)
+  },1000)
+
+
+</script>
+</html>

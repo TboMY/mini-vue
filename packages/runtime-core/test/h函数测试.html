@@ -48,12 +48,16 @@
   // ================================= 特殊的  ===========================================
 
   // text节点
-  const _text = h(RuntimeFlags.Text, 'jjjjj')
+  const _text = h(RuntimeFlags.Text, '___text')
   console.log(_text)
 
   // null
   const _null = h(null, '__null____')
   console.log(_null)
+
+  // fragment
+  const _fragment = h(RuntimeFlags.Fragment, '__fragment__')
+  console.log(_fragment)
 
 
 </script>

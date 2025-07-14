@@ -7,7 +7,7 @@
 <body>
 </body>
 <script type="module">
-  import { h, createRenderer, Text } from '../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+  import { h, createRenderer, Text, render } from '../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
 
   const preVNode = h('div',
     [
@@ -30,6 +30,11 @@
 
   const null_ = h(null, 'cjcjcjc')
   console.log('null_', null_)
+
+  // 测试container收尾都有text
+  const el_1 = h('div',null, '我是text1', h('h1', '我是h1'), h('h2', '我是h2'), '我是text2' )
+  console.log('el1',el_1)
+  render(el_1, document.body)
 
 
 </script>

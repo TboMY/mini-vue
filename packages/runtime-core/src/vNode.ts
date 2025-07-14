@@ -9,6 +9,7 @@ import {RuntimeFlags} from "packages/shared/src/constant";
 
 export const createVNode = (type?: string | symbol, props?: any, children?: any) => {
 
+    // 当前vnode的基本表示节点, 和children的类型进行或运算后, 得到总的shapeFlag
     const vNodeShapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0
     const shapeFlag = vNodeShapeFlag | getChildrenShapeFlag(children)
 
