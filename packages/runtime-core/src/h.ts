@@ -25,10 +25,14 @@ export function h(type: string | symbol, propsOrChildren?: object | Array<any>, 
 
     // debugger
 
+    // children只有arr,text,null三种, 没有children是单独的一个vnode的情况(方便patch)
     if (len >= 3) {
-        // const isVaildProps = isNil(propsOrChildren) || isObject(propsOrChildren)
-        // if (!isVaildProps) throw new Error('props不合法')
-        children = len === 3 ? arguments[2] : Array.prototype.slice.call(arguments, 2)
+
+        if (len > 3) {
+            children = Array.prototype.slice.call(arguments, 2)
+        } else if (len === 3 && isVNode(children)) {
+            children = [children]
+        }
         return createVNode(type, propsOrChildren, children)
     } else {
         if (isObject(propsOrChildren) && !isArr(propsOrChildren)) {

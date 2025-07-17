@@ -36,6 +36,14 @@
   console.log('el1', el_1)
   render(el_1, document.body)
 
+  // 测试如果只有三个参数,但第三个参数是一个数组
+  const el_children1 = h('div', null, [h('h1', '我是h1')])
+  const el_children2 = h('div', null, [h('h1', '我是h1'),'test2',h('h2', '我是h2')])
+  const el_children3 = h('div', null, [[[h('h2', '我是h2')]]])
+  console.log('el_children1',el_children1)
+  console.log('el_children2',el_children2)
+  console.log('el_children3',el_children3)
+
 
 </script>
 </html>

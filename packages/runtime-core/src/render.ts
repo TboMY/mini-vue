@@ -8,6 +8,7 @@ import {isArr, isNil, isString, ShapeFlags} from "@mini-vue/shared";
 import {isSameVNode} from "./vNode";
 import {RuntimeFlags} from "packages/shared/src/constant";
 import {reactive, ReactivityEffect} from "@mini-vue/reactivity";
+import {queueJob} from "./schedule";
 
 export interface createRendererOptions {
     insert: (el: Node, parent: Node, refer?: Node) => void;
@@ -206,6 +207,7 @@ export function createRenderer(options: createRendererOptions) {
      * @param children
      */
     const mountedChildren = (el, children) => {
+        // debugger
         children.forEach(child => {
             // debugger
             if (isString(child)) {
@@ -519,7 +521,7 @@ export function createRenderer(options: createRendererOptions) {
     }
 
     const mountComponent = (vnode, container, refer) => {
-        debugger
+        // debugger
 
         // type才是组件对象, 因为创建vnode的时候, 是比如 h(VueComponent), VueComponent才是object
         const {data, render} = vnode.type
@@ -534,22 +536,28 @@ export function createRenderer(options: createRendererOptions) {
             isMounted: false, // 标识符, 如果render里面修改了state, 导致指数爆炸级别的递归次数
         }
 
-        const updateVueComponent = () => {
+        const updateComponent = () => {
             if (!instance.isMounted) {
                 // render可以传入一个形参(proxy), render里面可以用proxy.age或者this.age
                 instance.subTree = render.call(state, state)
                 instance.isMounted = true
+                console.log('mountedSubTree', instance.subTree)
                 patch(null, instance.subTree, container, refer)
             } else {
                 // render中, 如果修改了state的值,(比如通过定时器), 一般不会这么做, 只是为了测试这个mounted
-
                 const subTree = render.call(state, state)
+                console.log('preSubTree', instance.subTree)
+                console.log('newSubTree', subTree)
                 patch(instance.subTree, subTree, container, refer)
                 instance.subTree = subTree
             }
         }
 
-        const _effect = new ReactivityEffect(updateVueComponent, () => update())
+        const _effect = new ReactivityEffect(updateComponent, () => queueJob(update))
+        // const _effect = new ReactivityEffect(updateComponent, () => {
+        //     console.log('update')
+        //     update()
+        // })
 
         const update = instance.update = () => {
             _effect.run()

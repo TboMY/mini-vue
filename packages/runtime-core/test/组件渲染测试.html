@@ -32,9 +32,17 @@
         a: 1
       }
     },
-    render () {
+    render ( proxy ) {
+      // this.a++
+      // 一般是不会这么做的, 因为如果直接在render()中同步修改state, 按理论来说会引起死循环的;(实际不会,只会执行一次, 因为effect的trigger中做了屏蔽)(_effect.running字段)
+      // 这里用定时器单纯是测试一下组件异步更新
+      setTimeout(() => {
+        this.a++
+        this.a++
 
-      return h(Fragment, { style: { color: 'red' } }, '我是subTree的text', h('h1', '我是h1111'))
+      }, 1000)
+
+      return h(Fragment, { style: { color: 'red' } }, h('h1', null, `我是响应式数据${ proxy.a }`))
     }
   }
 
