@@ -48,3 +48,7 @@ export function isJustObject(val: any) {
     return !isNil(val) && Object.prototype.toString.call(val) === '[object Object]'
 }
 
+export function hasOwn(val: object, key: string) {
+    return Object.prototype.hasOwnProperty.call(val, key)
+}
+

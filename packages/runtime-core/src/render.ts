@@ -4,7 +4,7 @@
  *
  */
 
-import {isArr, isNil, isString, ShapeFlags} from "@mini-vue/shared";
+import {hasOwn, isArr, isNil, isString, ShapeFlags} from "@mini-vue/shared";
 import {isSameVNode} from "./vNode";
 import {RuntimeFlags} from "packages/shared/src/constant";
 import {reactive, ReactivityEffect} from "@mini-vue/reactivity";
@@ -524,7 +524,7 @@ export function createRenderer(options: createRendererOptions) {
         // debugger
 
         // type才是组件对象, 因为创建vnode的时候, 是比如 h(VueComponent), VueComponent才是object
-        const {data, render} = vnode.type
+        const {data, render, props: propsOptions} = vnode.type
         const state = reactive(data?.() || {})
 
         const instance = {
@@ -534,22 +534,58 @@ export function createRenderer(options: createRendererOptions) {
             vnode,
             subTree: null, // 这个组件的children, 非Fragment的子vnode
             isMounted: false, // 标识符, 如果render里面修改了state, 导致指数爆炸级别的递归次数
+            propsOptions, // 定义组件时的props
+            proxy: null, // 这个组件实例的代理对象, 便于开发直接访问props,data里面的数据
         }
 
+        // debugger
         // 组件实例挂到vnode上,方便后续patch
         vnode.component = instance
         initProps(instance, vnode.props)
 
+
+        const publicProperty = {
+            $attrs: (instance) => instance.attrs,
+            $slots: (instance) => instance.slots
+        }
+        // 在组件中可以通过代理对象直接访问data,props,attrs等,
+        // 而不用 this.props.age, 方便开发者
+        const proxy = new Proxy(instance, {
+            get(target, key, receiver) {
+                const {state, props,} = target
+                if (state && hasOwn(state, key)) {
+                    return Reflect.get(state, key, receiver)
+                } else if (props && hasOwn(props, key)) {
+                    return Reflect.get(props, key, receiver)
+                }
+                // instance上面会挂载一些公开的, 但是不准修改的属性, 比如($attrs, $slot)
+                const getter = publicProperty[key]
+                getter && getter(target)
+            },
+            set(target, key, val, receiver) {
+                const {state, props,} = target
+                if (state && hasOwn(state, key)) {
+                    return Reflect.set(state, key, val, receiver)
+                } else if (props && hasOwn(props, key)) {
+                    // 按理说, 这里是不符合单向数据流的
+                    console.warn('props应该是只读的')
+                    return Reflect.set(props, key, val, receiver)
+                }
+                return true
+            }
+        })
+        instance.proxy = proxy
+
         const updateComponent = () => {
             if (!instance.isMounted) {
                 // render可以传入一个形参(proxy), render里面可以用proxy.age或者this.age
-                instance.subTree = render.call(state, state)
+                instance.subTree = render.call(proxy, proxy)
                 instance.isMounted = true
                 console.log('mountedSubTree', instance.subTree)
                 patch(null, instance.subTree, container, refer)
             } else {
                 // render中, 如果修改了state的值,(比如通过定时器), 一般不会这么做, 只是为了测试这个mounted
-                const subTree = render.call(state, state)
+                const subTree = render.call(proxy, proxy)
                 console.log('preSubTree', instance.subTree)
                 console.log('newSubTree', subTree)
                 patch(instance.subTree, subTree, container, refer)

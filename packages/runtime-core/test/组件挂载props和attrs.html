@@ -11,12 +11,13 @@
 </html>
 
 <script type="module">
+
+  // 官方的===========================
   // import {
   //   h,
-  //   createRenderer,
   //   render,
   //   Fragment
-  // } from '../node_modules/vue/dist/vue.esm-browser.js'
+  // } from '../node_modules/vue/dist/vue.runtime.esm-browser.js'
 
   import {
     h,
@@ -37,13 +38,14 @@
       }
     },
     render ( proxy ) {
-      return h(Fragment, h('h1', null, `我是响应式数据${ proxy.a }`))
+      return h(Fragment, h('h1', null, h('p', `我是data数据${ proxy.a }`), h('p', `我是props数据${ proxy.name }`)))
     }
   }
 
-  const component = h(VueComponent, { style: { color: 'red' }, a: 100, age: 100, name: 'yyr' })
+  const component = h(VueComponent, { style: { color: 'red' }, a: 100, name: 'yyr' })
   console.log(component)
 
+  // debugger
   // render(h(VueComponent), document.body)
   render.render(component, document.body)
 

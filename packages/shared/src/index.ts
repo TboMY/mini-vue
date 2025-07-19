@@ -4,7 +4,7 @@
  * 公共方法
  */
 
-export * from './judge'
+export * from './util'
 export * from "./constant";
 
 
