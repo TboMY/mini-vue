@@ -536,6 +536,10 @@ export function createRenderer(options: createRendererOptions) {
             isMounted: false, // 标识符, 如果render里面修改了state, 导致指数爆炸级别的递归次数
         }
 
+        // 组件实例挂到vnode上,方便后续patch
+        vnode.component = instance
+        initProps(instance, vnode.props)
+
         const updateComponent = () => {
             if (!instance.isMounted) {
                 // render可以传入一个形参(proxy), render里面可以用proxy.age或者this.age
@@ -563,6 +567,34 @@ export function createRenderer(options: createRendererOptions) {
             _effect.run()
         }
         update()
+        console.log('mountedInstance', instance)
+    }
+
+    const initProps = (instance, vNodeProps) => {
+        // 这都是指组件实例上的
+        const props = {}
+        const attrs = {}
+        const {propsOptions = {}} = instance
+
+        // todo 支持组件用数组形式定义props,
+        //  以及对对象形式进行类型校验
+
+        if (vNodeProps) {
+            // 筛选出组件定义的props
+            for (const key in vNodeProps) {
+                const value = vNodeProps[key]
+                if (key in propsOptions) {
+                    props[key] = value
+                } else {
+                    attrs[key] = value
+                }
+            }
+        }
+
+        // todo shallowReactive
+        // 这里应该是shallowReactive, 因为子组件不应该修改props,
+        instance.props = reactive(props)
+        instance.attrs = attrs
     }
 
 

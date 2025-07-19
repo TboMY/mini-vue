@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+</body>
+</html>
+
+<script type="module">
+  // import {
+  //   h,
+  //   createRenderer,
+  //   render,
+  //   Fragment
+  // } from '../node_modules/vue/dist/vue.esm-browser.js'
+
+  import {
+    h,
+    render,
+    Fragment
+  } from '../../runtime-dom/dist/runtime-dom.js'
+
+  // 用官方的和自己的进行对比测试
+
+  const VueComponent = {
+    props: {
+      age: Number,
+      name: String
+    },
+    data () {
+      return {
+        a: 1
+      }
+    },
+    render ( proxy ) {
+      return h(Fragment, h('h1', null, `我是响应式数据${ proxy.a }`))
+    }
+  }
+
+  const component = h(VueComponent, { style: { color: 'red' }, a: 100, age: 100, name: 'yyr' })
+  console.log(component)
+
+  // render(h(VueComponent), document.body)
+  render.render(component, document.body)
+
+
+</script>
