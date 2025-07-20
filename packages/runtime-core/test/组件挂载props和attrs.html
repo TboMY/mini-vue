@@ -38,6 +38,11 @@
       }
     },
     render ( proxy ) {
+
+      setTimeout(() => {
+        proxy.a++
+      }, 1000)
+
       return h(Fragment, h('h1', null, h('p', `我是data数据${ proxy.a }`), h('p', `我是props数据${ proxy.name }`)))
     }
   }
