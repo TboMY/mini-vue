@@ -5,7 +5,7 @@
  */
 
 import {isObject} from '@mini-vue/shared'
-import {ReactivityFlags} from "../../shared/src/constant";
+import {ReactivityFlags} from "@mini-vue/shared";
 import {track, trigger} from "./reactiveEffect";
 
 // 缓存已经reactive过的object, 弱引用,防止内存泄漏
@@ -29,6 +29,7 @@ const proxyHandlers = {
         return res
     },
     set(target: any, key: string | symbol, newValue: any, receiver: any): boolean {
+        // debugger
         const oldValue = target[key]
         Reflect.set(target, key, newValue, receiver)
         if (Object.is(newValue, oldValue)) {

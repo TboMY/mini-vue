@@ -71,15 +71,18 @@ const instanceProxyHandler = {
         getter && getter(target)
     },
     set(target, key, val, receiver) {
-        debugger
-        // todo bug: 在render中使用定时器更新data，渲染的值还是旧值
+        // debugger
         const {data, props,} = target
         if (data && hasOwn(data, key)) {
-            return Reflect.set(data, key, val, receiver)
+            // 这里不能使用Reflect.set, 因为这里使用set会触发在reactive的proxyHandlers中的set，
+            // 在那个方法中也会用到Reflect.set, 导致newvalue没有被更新到data中
+            // return Reflect.set(data, key, val, receiver)
+            data[key] = val
         } else if (props && hasOwn(props, key)) {
             // 按理说, 这里是不符合单向数据流的
             console.warn('props应该是只读的')
-            return Reflect.set(props, key, val, receiver)
+            // return Reflect.set(props, key, val, receiver)
+            props[key] = val
         }
         return true
     }

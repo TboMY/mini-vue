@@ -3,7 +3,7 @@
  * @Date: 2025/1/19 17:13
  *
  */
-import {DirtyLevel} from "../../shared/src/constant";
+import {DirtyLevel} from "@mini-vue/shared";
 
 export let activeEffect: any;
 

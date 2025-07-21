@@ -7,7 +7,7 @@
 import {isArr, isNil, isString, ShapeFlags} from "@mini-vue/shared";
 import {isSameVNode} from "./vNode";
 import {RuntimeFlags} from "packages/shared/src/constant";
-import {createComponentInstance, setupComponentInstance, setupRenderEffect} from "./component";
+import {createComponentInstance, setupComponentInstance} from "./component";
 import {ReactivityEffect} from "@mini-vue/reactivity";
 import {queueJob} from "./schedule";
 
