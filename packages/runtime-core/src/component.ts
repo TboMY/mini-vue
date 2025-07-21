@@ -3,13 +3,11 @@ import {reactive} from "@mini-vue/reactivity";
 
 export function createComponentInstance(vnode) {
     // type才是组件对象, 因为创建vnode的时候, 是比如 h(VueComponent), VueComponent才是object
-    const {data, render, props: propsOptions} = vnode.type
-
-    const state = reactive(isFunction(data) ? data() : (data || {}))
+    const {props: propsOptions} = vnode.type
 
     const instance = {
-        data: state,
-        render,
+        data: null,
+        render: null,
         update: null,
         vnode,
         subTree: null, // 这个组件的children, 非Fragment的子vnode
@@ -20,11 +18,20 @@ export function createComponentInstance(vnode) {
     return instance
 }
 
-export function setupComponentInstance(instance, vnode) {
-    initProps(instance, vnode.props)
+export function setupComponentInstance(instance) {
+    const {vnode} = instance
+    const {data, render} = vnode.type
+
     // 在组件中可以通过代理对象直接访问data,props,attrs等,
     // 而不用 this.props.age, 方便开发者
-    instance.proxy = new Proxy(instance, instanceProxyHandler)
+    const proxy = new Proxy(instance, instanceProxyHandler)
+    instance.proxy = proxy
+
+    initProps(instance, vnode.props)
+
+    const state = reactive(isFunction(data) ? data.call(proxy) : (data || {}))
+    instance.data = state
+    instance.render = render
 }
 
 const initProps = (instance, vNodeProps) => {
@@ -60,6 +67,7 @@ const publicProperty = {
 }
 const instanceProxyHandler = {
     get(target, key, receiver) {
+        // debugger
         const {data, props,} = target
         if (data && hasOwn(data, key)) {
             return Reflect.get(data, key, receiver)

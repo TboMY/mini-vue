@@ -79,6 +79,7 @@ export function createRenderer(options: createRendererOptions) {
 
         if (!newVNode) return;
 
+        // debugger
         // 前后两次虚拟dom变了(type或key变了); 就删除老dom,重新渲染新dom
         if (preVNode && !isSameVNode(preVNode, newVNode)) {
             unMount(preVNode)
@@ -151,10 +152,65 @@ export function createRenderer(options: createRendererOptions) {
     const processComponent = (preVNode, newVNode, container, refer) => {
         if (isNil(preVNode)) {
             mountComponent(newVNode, container, refer)
-        } else {
-
-
         }
+        /**
+         *  一个组件传入的props更新了， 更新组件；
+         *  比如一个子组件，h(Component，props), 如果这个props变了，就会到这里
+         *  而不是在组件内部的props被修改了，（比如this。props.age = 20; 因为组件内部自动会触发effec更新）
+         */
+        else {
+            // debugger
+            updateComponent(preVNode, newVNode)
+        }
+    }
+
+    const updateComponent = (preVNode, newVNode) => {
+        // 复用instance
+        const instance = newVNode.component = preVNode.component
+        const {propsOptions} = instance
+
+        const preProps = preVNode.props || {}
+        const newProps = newVNode.props || {}
+
+        // 一个一个修改属性, 因为instance.props是reactive; 直接覆盖会丢失响应式
+        if (hasComponentPropsChanged(preProps, newProps)) {
+            Object.keys(newProps).forEach(key => {
+                if (key in propsOptions) {
+                    instance.props[key] = newProps[key]
+                } else {
+                    instance.attrs[key] = newProps[key]
+                }
+            })
+
+            Object.keys(instance.props).forEach(key => {
+                if (!(key in newProps)) {
+                    if (key in propsOptions) {
+                        delete instance.props[key]
+                    } else {
+                        delete instance.attrs[key]
+                    }
+                }
+            })
+        }
+    }
+
+    const hasComponentPropsChanged = (preProps, newProps) => {
+        const keys1 = Object.keys(preProps)
+
+        if (keys1.length !== Object.keys(newProps).length) {
+            return true
+        }
+
+        for (let i = 0; i < keys1.length; i++) {
+            const key = keys1[i]
+            if (preProps[key] !== newProps[key]) {
+                return true
+            }
+        }
+    }
+
+    const updateComponentProps = (instance, preProps, newProps) => {
+
     }
 
 
@@ -167,7 +223,7 @@ export function createRenderer(options: createRendererOptions) {
         const {type, props, children, shapeFlag} = vNode
         const mountedEl = vNode.el = hostCreateElement(type)
         hostInsert(mountedEl, container, refer)
-        props && setProps(mountedEl, null, props)
+        props && patchElementProps(mountedEl, null, props)
 
         // 这里通过位运算判断children的类型; 类似前端组件权限控制的方式
 
@@ -187,7 +243,7 @@ export function createRenderer(options: createRendererOptions) {
      * @param preProps
      * @param newProps
      */
-    const setProps = (el, preProps, newProps) => {
+    const patchElementProps = (el, preProps, newProps) => {
         if (!preProps && !newProps) return;
 
         preProps = preProps || {};
@@ -454,7 +510,7 @@ export function createRenderer(options: createRendererOptions) {
     // 网上博客讲解
     // https://www.cnblogs.com/burc/p/17964032
     const getSequence = (indexArr) => {
-        if (!indexArr || indexArr.length === 0) return
+        if (!indexArr || indexArr.length === 0) return []
 
         let len = indexArr.length
         let left;
@@ -522,23 +578,23 @@ export function createRenderer(options: createRendererOptions) {
     }
 
     const mountComponent = (vnode, container, refer) => {
-
+        // debugger
         // 1.创建组件实例
         // 组件实例挂到vnode上,方便后续patch
         const instance = vnode.component = createComponentInstance(vnode)
 
         // 2. instance设置属性
-        setupComponentInstance(instance, vnode)
+        setupComponentInstance(instance)
 
         // 3.创建_effect实例，形成响应式
-        setupRenderEffect(instance, vnode, container, refer)
+        setupRenderEffect(instance, container, refer)
 
     }
 
-    const setupRenderEffect = (instance, vnode, container, refer) => {
-        const {isMounted, proxy, subTree: preSubTree} = instance
-        const {render} = vnode.type
+    const setupRenderEffect = (instance, container, refer) => {
         const updateComponent = () => {
+            const {isMounted, proxy, subTree: preSubTree, render} = instance
+            // debugger
             if (!isMounted) {
                 // render可以传入一个形参(proxy), render里面可以用proxy.age或者this.age
                 const subTree = render.call(proxy, proxy)
@@ -551,6 +607,7 @@ export function createRenderer(options: createRendererOptions) {
                 const subTree = render.call(proxy, proxy)
                 console.log('preSubTree', preSubTree)
                 console.log('newSubTree', subTree)
+                // debugger
                 patch(preSubTree, subTree, container, refer)
                 instance.subTree = subTree
             }

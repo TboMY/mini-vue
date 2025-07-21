@@ -8,6 +8,7 @@ const queue = []
 let isFlushing = false
 
 export function queueJob(job) {
+    // debugger
     if (!queue.includes(job)) {
         queue.push(job)
     }
@@ -20,6 +21,7 @@ export function queueJob(job) {
         // 比如可能job()同步导致queue中添加元素, 但是回调里面foreach之后让queue.length=0;
         // 又或者最后才isFlushing = false,导致异步渲染都不执行
         queueMicrotask(() => {
+            // debugger
             isFlushing = false
             const copy = queue.slice(0)
             queue.length = 0
