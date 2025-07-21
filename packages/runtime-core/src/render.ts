@@ -182,13 +182,16 @@ export function createRenderer(options: createRendererOptions) {
                 }
             })
 
+            // 先处理props的删除
             Object.keys(instance.props).forEach(key => {
                 if (!(key in newProps)) {
-                    if (key in propsOptions) {
-                        delete instance.props[key]
-                    } else {
-                        delete instance.attrs[key]
-                    }
+                    delete instance.props[key]
+                }
+            })
+            // 再处理attrs的删除
+            Object.keys(instance.attrs).forEach(key => {
+                if (!(key in newProps)) {
+                    delete instance.attrs[key]
                 }
             })
         }
