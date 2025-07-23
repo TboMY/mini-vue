@@ -167,39 +167,28 @@ export function createRenderer(options: createRendererOptions) {
     const updateComponent = (preVNode, newVNode) => {
         // 复用instance
         const instance = newVNode.component = preVNode.component
-        const {propsOptions} = instance
 
-        const preProps = preVNode.props || {}
-        const newProps = newVNode.props || {}
-
-        // 一个一个修改属性, 因为instance.props是reactive; 直接覆盖会丢失响应式
-        if (hasComponentPropsChanged(preProps, newProps)) {
-            Object.keys(newProps).forEach(key => {
-                if (key in propsOptions) {
-                    instance.props[key] = newProps[key]
-                } else {
-                    instance.attrs[key] = newProps[key]
-                }
-            })
-
-            // 先处理props的删除
-            Object.keys(instance.props).forEach(key => {
-                if (!(key in newProps)) {
-                    delete instance.props[key]
-                }
-            })
-            // 再处理attrs的删除
-            Object.keys(instance.attrs).forEach(key => {
-                if (!(key in newProps)) {
-                    delete instance.attrs[key]
-                }
-            })
+        if (shouldUpdateComponent(preVNode, newVNode)) {
+            instance.next = newVNode
+            instance.update()
         }
     }
 
-    const hasComponentPropsChanged = (preProps, newProps) => {
-        const keys1 = Object.keys(preProps)
+    const shouldUpdateComponent = (preVNode, newVNode) => {
+        const {props: preProps = {}, children: preChildren} = preVNode
+        const {props: newProps = {}, children: newChildren} = newVNode
 
+        // 有插槽, 直接运行
+        if (preChildren || newChildren) return true
+
+        // 属性是否变化?
+        return hasVNodePropsChanged(preProps, newProps)
+    }
+
+    const hasVNodePropsChanged = (preProps, newProps) => {
+        if (preProps === newProps) return false
+
+        const keys1 = Object.keys(preProps)
         if (keys1.length !== Object.keys(newProps).length) {
             return true
         }
@@ -212,8 +201,36 @@ export function createRenderer(options: createRendererOptions) {
         }
     }
 
-    const updateComponentProps = (instance, preProps, newProps) => {
+    /**
+     * 更新组件实例上的props(响应式), newProps是vnode上的所有props(instance.props+attrs),
+     * @param instance
+     * @param preProps
+     * @param newProps
+     */
+    const updateComponentProps = (instance, preProps, newProps = {}) => {
+        // 都是对象引用, 并且preProps还是shallowReactive, 所以直接操作形参没问题
+        // 一个一个修改属性, 因为instance.props是reactive; 直接覆盖会丢失响应式
+        const {propsOptions, attrs} = instance
+        Object.keys(newProps).forEach(key => {
+            if (key in propsOptions) {
+                preProps[key] = newProps[key]
+            } else {
+                attrs[key] = newProps[key]
+            }
+        })
 
+        // 先处理props的删除
+        Object.keys(preProps).forEach(key => {
+            if (!(key in newProps)) {
+                delete preProps[key]
+            }
+        })
+        // 再处理attrs的删除
+        Object.keys(attrs).forEach(key => {
+            if (!(key in newProps)) {
+                delete attrs[key]
+            }
+        })
     }
 
 
@@ -596,7 +613,7 @@ export function createRenderer(options: createRendererOptions) {
 
     const setupRenderEffect = (instance, container, refer) => {
         const updateComponent = () => {
-            const {isMounted, proxy, subTree: preSubTree, render} = instance
+            const {isMounted, proxy, subTree: preSubTree, render, next: nextVNode} = instance
             // debugger
             if (!isMounted) {
                 // render可以传入一个形参(proxy), render里面可以用proxy.age或者this.age
@@ -606,10 +623,23 @@ export function createRenderer(options: createRendererOptions) {
                 console.log('mountedSubTree', subTree)
                 patch(null, subTree, container, refer)
             } else {
+
+                // 如果有, 说明进入到了processComponent的else分支
+                if (nextVNode) {
+                    updateComponentPreRender(instance, nextVNode)
+                    // 不能直接return, 因为这里直接return , 然后由job来回调这个函数,
+                    // =>patch subTree=>Fragment=>patchChildren=>processComponent=>shouldUpdateComponent=>回到这个updateComponent
+                    // => 然后进入这个if => updateComponentProps=>set=>trigger=> 由于一开始job就执行了_effect.run(), 所以running=1, 所以这个trigger直接return了
+                    // =>后面的代码就没机会执行了(patch 子组件的subTree执行不了了)
+
+                    // return
+                }
+
                 // render中, 如果修改了state的值,(比如通过定时器), 一般不会这么做, 只是为了测试这个mounted
                 const subTree = render.call(proxy, proxy)
                 console.log('preSubTree', preSubTree)
                 console.log('newSubTree', subTree)
+
                 // debugger
                 patch(preSubTree, subTree, container, refer)
                 instance.subTree = subTree
@@ -627,6 +657,12 @@ export function createRenderer(options: createRendererOptions) {
         }
         update()
         console.log('mountedInstance', instance)
+    }
+
+    const updateComponentPreRender = (instance, nextVNode) => {
+        instance.next = null
+        instance.vnode = nextVNode
+        updateComponentProps(instance, instance.props, nextVNode.props)
     }
 
 
