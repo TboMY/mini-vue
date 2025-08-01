@@ -41,6 +41,11 @@ const getChildrenShapeFlag = (children: any) => {
     if (!isObject(children)) {
         return ShapeFlags.TEXT_CHILDREN
     }
+
+    // 视为插槽
+    if (isObject(children)) {
+        return ShapeFlags.SLOTS_CHILDREN
+    }
     return 0
 }
 
@@ -61,6 +66,10 @@ const createChildren = (children: any) => {
         return children.map(child => {
             return createChildren(child)
         })
+    }
+
+    if (isObject(children)){
+        return children
     }
     return null
 }

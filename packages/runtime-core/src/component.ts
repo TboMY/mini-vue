@@ -1,4 +1,4 @@
-import {hasOwn, isFunction} from "@mini-vue/shared";
+import {hasOwn, isFunction, ShapeFlags} from "@mini-vue/shared";
 import {proxyRefs, reactive} from "@mini-vue/reactivity";
 
 export function createComponentInstance(vnode) {
@@ -9,6 +9,7 @@ export function createComponentInstance(vnode) {
         data: null,
         props: null,
         attrs: null,
+        slots: null,
         render: null,
         update: null,
         vnode,
@@ -29,8 +30,8 @@ export function setupComponentInstance(instance) {
     // 而不用 this.props.age, 方便开发者
     const proxy = new Proxy(instance, instanceProxyHandler)
     instance.proxy = proxy
-
     initProps(instance, vnode.props)
+    initSlots(instance, vnode)
 
     const state = reactive(isFunction(data) ? data.call(proxy) : (data || {}))
     instance.data = state
@@ -79,6 +80,15 @@ const initProps = (instance, vNodeProps) => {
     instance.attrs = attrs
 }
 
+const initSlots = (instance, vNode) => {
+    const {shapeFlag, children} = vNode
+    if (shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
+        instance.slots = children
+    } else {
+        instance.slots = {}
+    }
+}
+
 const publicProperty = {
     $attrs: (instance) => instance.attrs,
     $slots: (instance) => instance.slots
@@ -94,9 +104,9 @@ const instanceProxyHandler = {
         } else if (setupState && hasOwn(setupState, key)) {
             return Reflect.get(setupState, key, receiver)
         }
-        // instance上面会挂载一些公开的, 但是不准修改的属性, 比如($attrs, $slot)
+        // instance上面会挂载一些公开的, 但是不准修改的属性, 比如($attrs, $slots)
         const getter = publicProperty[key]
-        getter && getter(target)
+        return getter?.(target)
     },
     set(target, key, val, receiver) {
         // debugger
