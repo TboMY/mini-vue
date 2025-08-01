@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+</body>
+</html>
+
+<script type="module">
+
+  // 官方的===========================
+  // import {
+  //   h,
+  //   render,
+  //   Fragment
+  // } from '../node_modules/vue/dist/vue.runtime.esm-browser.js'
+
+  import {
+    h,
+    render,
+    Fragment,
+    ref
+  } from '../../runtime-dom/dist/runtime-dom.js'
+
+  // 用官方的和自己的进行对比测试
+
+  const SonComponent = {
+    props: {
+      name: String
+    },
+    render () {
+      return h(Fragment, null, h('h1', { style: { color: 'red' } }, `hello ${ this.name }`))
+    }
+  }
+
+  const FatherComponent = {
+    setup ( { props } ) {
+      const num = ref(99)
+
+      setInterval(() => num.value++, 1000)
+
+      // return () => h('div', num.value)
+      return { num }
+    },
+    render () {
+      return h(Fragment, null, [
+        h(SonComponent, { name: this.num })
+      ])
+    }
+  }
+
+  const component = h(FatherComponent)
+  console.log(component)
+
+  // debugger
+  // render(component, document.body)
+  render.render(component, document.body)
+
+
+</script>
