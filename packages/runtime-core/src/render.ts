@@ -279,6 +279,7 @@ export function createRenderer(options: createRendererOptions) {
      * @param children
      */
     const mountedChildren = (el, children) => {
+        // todo 这个里面应该要递归才对; 因为h函数里面可能数组套数组
         normalize(children)
         // debugger
         children.forEach(child => {
@@ -290,6 +291,7 @@ export function createRenderer(options: createRendererOptions) {
         if (isArr(children)) {
             for (let i = 0; i < children.length; i++) {
                 const child = children[i]
+                // 这里把基本类型都包含了, 源码里面只有number和string
                 if (!isObject(child)) {
                     children[i] = createVNode(RuntimeFlags.Text, null, String(child))
                 }
@@ -679,7 +681,7 @@ export function createRenderer(options: createRendererOptions) {
                 unMount(children)
             }
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
-            // 组件最外层是一个Fragment, 所以不用考虑是否为数组
+            // 组件最外层是一个Fragment(或者一个root元素,比如div) 所以不用考虑是否为数组
             unMount(vnode.component.subTree)
         } else {
             hostRemove(vnode.el)

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+
+<script type="module">
+  // import { h, createRenderer, Fragment, render } from '../node_modules/vue/dist/vue.runtime.esm-browser.js'
+  import { createRendererOptions,h,render } from '../dist/runtime-dom.js'
+
+  const FatherComponent = {
+    render () {
+      return h('div', null, '我是text1', h('h1', '我是h1'),
+        h('h2', [ h('h3', '我是h2中的h3'), '我是h2中的text1', '  我是h2中的text2' ]), '我是text2',
+        [ h('p', null, '我是p1', '我是p2') ])
+    }
+  }
+
+  // console.log('直接获得的vnode', h('div', null, '我是text1', h('h1', '我是h1'), h('h2', '我是h2'), '我是text2'))
+
+  const component = h(FatherComponent)
+  console.log('作为组件中的subtree', component)
+
+  render.render(component, document.body)
+  // render.render(component, document.body)
+
+  setTimeout(() => console.log(component), 1000)
+
+
+</script>
+</html>
