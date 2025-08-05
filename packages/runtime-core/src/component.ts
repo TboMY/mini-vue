@@ -3,7 +3,7 @@ import {proxyRefs, reactive} from "@mini-vue/reactivity";
 
 export function createComponentInstance(vnode) {
     // type才是组件对象, 因为创建vnode的时候, 是比如 h(VueComponent), VueComponent才是object
-    const {props: propsOptions} = vnode.type
+    const {props: propsOptions = {}} = vnode.type
 
     const instance = {
         data: null,
@@ -40,7 +40,7 @@ export function setupComponentInstance(instance) {
 
     // setup返回值可能是一个fn或obj; 是fn就代替render的作用(优先级高于单独的render), 是obj的作用和data类似(比如可以在render中使用),但不合并到data里面
     if (setup) {
-        // context为 props, emits, attrs, slots,expose
+        // context为 emits, attrs, slots,exposed
         const context = {
             attrs: instance.attrs,
             slots: instance.slots,

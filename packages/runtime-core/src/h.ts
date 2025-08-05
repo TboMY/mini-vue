@@ -38,16 +38,16 @@ export function h(type: string | symbol, propsOrChildren?: object | Array<any>, 
         if (isObject(propsOrChildren) && !isArr(propsOrChildren)) {
             // 虽然propsOrChildren是一个对象, 但是更具体是一个vnode,所以视为children
             if (isVNode(propsOrChildren)) {
-                // todo 为什么这里明明只是一个vnode, 但是还是要包裹在数组中? 但是如果是只是一个基本类型就不需要包裹在数组中?
-                // 估计是为了方便render写shapeFlag的判断
-                return createVNode(type, null, [propsOrChildren])
+                // 为什么这里明明只是一个vnode, 但是还是要包裹在数组中? 但是如果是只是一个基本类型就不需要包裹在数组中?
+                // 后续会进行规范化, (比如mountedChildren中),纯str转化为Text类型vnode
+                return createVNode(type, undefined, [propsOrChildren])
             }
-            return createVNode(type, propsOrChildren, null)
+            return createVNode(type, propsOrChildren, undefined)
         } else {
             // 这里的propsOrChildren可能是一个基本类型, 也可能是一个数组
             // 如果是基本类型, 那么children就是propsOrChildren
             // 如果是数组, 那么children就是propsOrChildren
-            return createVNode(type, null, propsOrChildren)
+            return createVNode(type, undefined, propsOrChildren)
         }
     }
 }

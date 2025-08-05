@@ -4,8 +4,8 @@
  *
  */
 
-import {isArr, isNil, isString, ShapeFlags} from "@mini-vue/shared";
-import {isSameVNode} from "./vNode";
+import {isArr, isNil, isObject, isString, ShapeFlags} from "@mini-vue/shared";
+import {createVNode, isSameVNode} from "./vNode";
 import {RuntimeFlags} from "packages/shared/src/constant";
 import {createComponentInstance, setupComponentInstance} from "./component";
 import {ReactivityEffect} from "@mini-vue/reactivity";
@@ -87,11 +87,6 @@ export function createRenderer(options: createRendererOptions) {
         }
 
         // debugger
-
-        // todo: 确定了的bug, 如果创建的h函数为: h('div',null, '我是text1', h('h1', '我是h1'), h('h2', '我是h2'), '我是text2' )
-        // 那么无法正常渲染, 因为setElementText调用的是textContent, 会直接覆盖, 最后只渲染'我是text2'
-
-        // todo: 确定了的bug, unmountChildren方法, 对于children数组中有string的情况, 删除不了
 
         // todo: patchKeyedChildren方法, 对于都没有key的情况(都是undefined),有问题
         const {type, shapeFlag} = newVNode
@@ -284,15 +279,23 @@ export function createRenderer(options: createRendererOptions) {
      * @param children
      */
     const mountedChildren = (el, children) => {
+        normalize(children)
         // debugger
         children.forEach(child => {
-            // debugger
-            if (isString(child)) {
-                hostSetElementText(el, child)
-                return
-            }
             patch(null, child, el, null)
         })
+    }
+
+    const normalize = (children) => {
+        if (isArr(children)) {
+            for (let i = 0; i < children.length; i++) {
+                const child = children[i]
+                if (!isObject(child)) {
+                    children[i] = createVNode(RuntimeFlags.Text, null, String(child))
+                }
+            }
+        }
+        return children
     }
 
     // n1, n2 对应的真实dom是一样的
@@ -340,7 +343,7 @@ export function createRenderer(options: createRendererOptions) {
         if (!vNode1 || !vNode2) return
 
         const children1 = vNode1.children
-        const children2 = vNode2.children
+        const children2 = normalize(vNode2.children)
         const preShapeFlag = vNode1.shapeFlag
         const shapeFlag = vNode2.shapeFlag
 
@@ -381,7 +384,7 @@ export function createRenderer(options: createRendererOptions) {
 
 
     const patchKeyedChildren = (children1, children2, container) => {
-        // debugger
+        debugger
         let i = 0
         let e1 = children1.length - 1
         let e2 = children2.length - 1
@@ -666,19 +669,23 @@ export function createRenderer(options: createRendererOptions) {
     }
 
 
-    // todo 这里卸载应该有问题, Fragment的children可能不是arr(还是和下面unMountChildren一样的问题, 如果只是一个str)
     const unMount = (vnode) => {
         const {shapeFlag, type} = vnode
         if (type === RuntimeFlags.Fragment) {
-            unMountChildren(vnode.children)
+            const children = vnode.children
+            if (isArr(children)) {
+                unMountChildren(children)
+            } else {
+                unMount(children)
+            }
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
+            // 组件最外层是一个Fragment, 所以不用考虑是否为数组
             unMount(vnode.component.subTree)
         } else {
             hostRemove(vnode.el)
         }
     }
 
-    // todo 这里的卸载应该是有问题的, 因为children中, vnode和string都有, 如果是string, 这个unmount没用
     const unMountChildren = (children) => {
         if (!isArr(children)) return
         for (let i = 0; i < children.length; i++) {

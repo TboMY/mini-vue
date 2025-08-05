@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+
+<script type="module">
+  import { h, createRenderer, Fragment, render } from '../node_modules/vue/dist/vue.runtime.esm-browser.js'
+
+  const FatherComponent = {
+    render () {
+      // return h('div', null,h('div',123),'11123')
+      debugger
+      return h('div', null, h('div', 123), '999',h('div',8908))
+    }
+  }
+
+  const component = h(FatherComponent)
+  console.log(component)
+  //
+  render(component, document.body)
+  // render.render(component, document.body)
+
+  // console.log(h('div', null, h('div', 123), '999',h('div',8908)))
+
+</script>
+</html>
