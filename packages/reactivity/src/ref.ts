@@ -111,8 +111,7 @@ export function toRefs(target: object) {
 }
 
 // 代理ref,不用手动`.value`,主要是在模版使用ref的时候,将用到的ref进行转换
-
-// temp: 好像只代理一层?
+// 或者将一个ref作为reactive的一个属性, 也会有自动解包的功能
 export function proxyRefs(target: object) {
     return new Proxy(target, {
         get(target, key, receiver) {

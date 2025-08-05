@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+</body>
+</html>
+
+<script type="module">
+
+  // 官方的===========================
+  // import {
+  //   h,
+  //   render,
+  //   Fragment
+  // } from '../node_modules/vue/dist/vue.runtime.esm-browser.js'
+
+  import {
+    h,
+    render,
+    Fragment,
+    ref
+  } from '../../runtime-dom/dist/runtime-dom.js'
+
+  // 用官方的和自己的进行对比测试
+
+  const FatherComponent = {
+    setup ( props, { slots, attrs, emits, expose } ) {
+      const num = ref(99)
+
+      return () => h(Fragment, null,
+        h('button', { onClick: () => emits('myEvent', 100) }, 'dian'),
+        h('h1', num.value)
+      )
+    }
+  }
+
+  const component = h(FatherComponent, { onMyEvent: ( n ) => console.log(n) })
+  console.log(component)
+  render.render(component, document.body)
+
+  // 测试组件卸载
+  setTimeout(() => render.render(null, document.body), 3000)
+
+</script>

@@ -17,7 +17,8 @@ export function createComponentInstance(vnode) {
         isMounted: false, // 标识符, 如果render里面修改了state, 导致指数爆炸级别的递归次数
         propsOptions, // 定义组件时的props
         proxy: null, // 这个组件实例的代理对象, 便于开发直接访问props,data里面的数据
-        setupState: null // setup函数返回值为对象时
+        setupState: null, // setup函数返回值为对象时
+        exposed: null, // 组件expose出去的值; 实例上叫exposed, 使用时的方法叫expose
     }
     return instance
 }
@@ -39,12 +40,21 @@ export function setupComponentInstance(instance) {
 
     // setup返回值可能是一个fn或obj; 是fn就代替render的作用(优先级高于单独的render), 是obj的作用和data类似(比如可以在render中使用),但不合并到data里面
     if (setup) {
-        // context为 props, emits, attrs, slots,exposed
+        // context为 props, emits, attrs, slots,expose
         const context = {
-            props: instance.props,
-            attrs: instance.attrs
+            attrs: instance.attrs,
+            slots: instance.slots,
+            expose: (value) => instance.exposed = value,
+            emits: (event = '', ...args) => {
+                // debugger
+                // 使用时 emits('myEvent','cj')
+                // 定义时 v-on:myEvent (或者@myEvent) -> onMyEvent
+                const eventName = `on${event[0].toUpperCase()}${event.slice(1)}`
+                const handler = vnode?.props?.[eventName]
+                handler && handler(...args)
+            }
         }
-        const setupResult = setup(context)
+        const setupResult = setup(instance.props, context)
         if (isFunction(setupResult)) {
             instance.render = setupResult
         } else {

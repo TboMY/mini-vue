@@ -666,8 +666,16 @@ export function createRenderer(options: createRendererOptions) {
     }
 
 
+    // todo 这里卸载应该有问题, Fragment的children可能不是arr(还是和下面unMountChildren一样的问题, 如果只是一个str)
     const unMount = (vnode) => {
-        hostRemove(vnode.el)
+        const {shapeFlag, type} = vnode
+        if (type === RuntimeFlags.Fragment) {
+            unMountChildren(vnode.children)
+        } else if (shapeFlag & ShapeFlags.COMPONENT) {
+            unMount(vnode.component.subTree)
+        } else {
+            hostRemove(vnode.el)
+        }
     }
 
     // todo 这里的卸载应该是有问题的, 因为children中, vnode和string都有, 如果是string, 这个unmount没用
