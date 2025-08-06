@@ -1,7 +1,7 @@
 import {hasOwn, isFunction, ShapeFlags} from "@mini-vue/shared";
 import {proxyRefs, reactive} from "@mini-vue/reactivity";
 
-export function createComponentInstance(vnode) {
+export function createComponentInstance(vnode, parentComponent) {
     // type才是组件对象, 因为创建vnode的时候, 是比如 h(VueComponent), VueComponent才是object
     const {props: propsOptions = {}} = vnode.type
 
@@ -19,6 +19,8 @@ export function createComponentInstance(vnode) {
         proxy: null, // 这个组件实例的代理对象, 便于开发直接访问props,data里面的数据
         setupState: null, // setup函数返回值为对象时
         exposed: null, // 组件expose出去的值; 实例上叫exposed, 使用时的方法叫expose
+        parent: parentComponent,// 父组件实例
+        provides: parentComponent?.provides ? parentComponent.provides : Object.create(null), // provide和inject方法的载体, 本质是通过构造原型链寻找
     }
     return instance
 }
@@ -54,7 +56,10 @@ export function setupComponentInstance(instance) {
                 handler && handler(...args)
             }
         }
+        setCurrentInstance(instance)
         const setupResult = setup(instance.props, context)
+        unsetCurrentInstance()
+
         if (isFunction(setupResult)) {
             instance.render = setupResult
         } else {
@@ -137,3 +142,9 @@ const instanceProxyHandler = {
         return true
     }
 }
+
+let currentInstance = null
+export const getCurrentInstance = () => currentInstance
+export const setCurrentInstance = (instance) => currentInstance = instance
+export const unsetCurrentInstance = ()=> currentInstance = null
+

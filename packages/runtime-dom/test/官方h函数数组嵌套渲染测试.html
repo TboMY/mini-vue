@@ -9,26 +9,47 @@
 </body>
 
 <script type="module">
-  // import { h, createRenderer, Fragment, render } from '../node_modules/vue/dist/vue.runtime.esm-browser.js'
-  import { createRendererOptions,h,render } from '../dist/runtime-dom.js'
+  import { h, createRenderer, Fragment, render } from '../node_modules/vue/dist/vue.runtime.esm-browser.js'
+  // import { createRendererOptions, h, render } from '../dist/runtime-dom.js'
 
-  const FatherComponent = {
-    render () {
-      return h('div', null, '我是text1', h('h1', '我是h1'),
-        h('h2', [ h('h3', '我是h2中的h3'), '我是h2中的text1', '  我是h2中的text2' ]), '我是text2',
-        [ h('p', null, '我是p1', '我是p2') ])
-    }
-  }
+  // const FatherComponent = {
+  //   render () {
+  //     return h('div', null,
+  //       '我是text1',
+  //       h('h1', '我是h1'),
+  //       h('h2', [ h('h3', '我是h2中的h3'), '我是h2中的text1', '  我是h2中的text2' ]),
+  //       '我是text2',
+  //       [ h('p', null, '我是p1', '我是p2'),'我是p标签同级text' ])
+  //   }
+  // }
+  //
+  // // console.log('直接获得的vnode', h('div', null, '我是text1', h('h1', '我是h1'), h('h2', '我是h2'), '我是text2'))
+  //
+  // const component = h(FatherComponent)
+  // console.log('作为组件中的subtree', component)
+  //
+  // render(component, document.body)
+  // // render.render(component, document.body)
+  //
+  // setTimeout(() => console.log(component), 1000)
 
-  // console.log('直接获得的vnode', h('div', null, '我是text1', h('h1', '我是h1'), h('h2', '我是h2'), '我是text2'))
 
-  const component = h(FatherComponent)
-  console.log('作为组件中的subtree', component)
+  const el = h('div', null,
+        '我是text1',
+        h('h1', '我是h1'),
+        h('h2', [ h('h3', '我是h2中的h3'), '我是h2中的text1', '  我是h2中的text2' ]),
+        '我是text2',
+        [ h('p', null, '我是p1', '我是p2'),'我是p标签同级text' ])
 
-  render.render(component, document.body)
-  // render.render(component, document.body)
+  console.log(el)
 
-  setTimeout(() => console.log(component), 1000)
+  render(el,document.body)
+
+  setTimeout(()=>console.log(el),1000)
+
+  // 所以无论是直接渲染element还是组件中的render, 只要render之后(挂载), 其vnode的children数组中的str基本类型都会变成vnode
+
+
 
 
 </script>

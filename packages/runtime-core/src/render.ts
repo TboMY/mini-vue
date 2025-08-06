@@ -72,8 +72,9 @@ export function createRenderer(options: createRendererOptions) {
      * @param newVNode
      * @param container
      * @param refer
+     * @param parentComponent
      */
-    const patch = (preVNode, newVNode, container, refer) => {
+    const patch = (preVNode, newVNode, container, refer, parentComponent = null) => {
         // 不重复渲染
         if (preVNode === newVNode) return
 
@@ -95,16 +96,16 @@ export function createRenderer(options: createRendererOptions) {
                 processText(preVNode, newVNode, container)
                 break
             case RuntimeFlags.Fragment:
-                processFragment(preVNode, newVNode, container)
+                processFragment(preVNode, newVNode, container, parentComponent)
                 break
             default:
                 // debugger
                 if (shapeFlag & ShapeFlags.ELEMENT) {
-                    processElement(preVNode, newVNode, container, refer)
+                    processElement(preVNode, newVNode, container, refer, parentComponent)
                 }
                 // ShapeFlags.COMPONENT 包括函数组件和状态组件
                 else if (shapeFlag & ShapeFlags.COMPONENT) {
-                    processComponent(preVNode, newVNode, container, refer)
+                    processComponent(preVNode, newVNode, container, refer, parentComponent)
                 }
         }
 
@@ -124,29 +125,29 @@ export function createRenderer(options: createRendererOptions) {
         }
     }
 
-    const processFragment = (preVNode, newVNode, container) => {
+    const processFragment = (preVNode, newVNode, container, parentComponent) => {
         if (!preVNode) {
-            mountedChildren(container, newVNode.children)
+            mountedChildren(container, newVNode.children, parentComponent)
         } else {
-            patchChildren(preVNode, newVNode, container)
+            patchChildren(preVNode, newVNode, container, parentComponent)
         }
     }
 
-    const processElement = (preVNode, newVNode, container, refer) => {
+    const processElement = (preVNode, newVNode, container, refer, parentComponent) => {
         // debugger
         // 初次渲染
         if (!preVNode) {
-            return mountedElement(newVNode, container, refer)
+            return mountedElement(newVNode, container, refer, parentComponent)
         } else {
             // 两个虚拟dom的key和type都没变;
             // 就要复用原来的真实dom; 更新其属性和children
-            return patchElement(preVNode, newVNode)
+            return patchElement(preVNode, newVNode, parentComponent)
         }
     }
 
-    const processComponent = (preVNode, newVNode, container, refer) => {
+    const processComponent = (preVNode, newVNode, container, refer, parentComponent) => {
         if (isNil(preVNode)) {
-            mountComponent(newVNode, container, refer)
+            mountComponent(newVNode, container, refer, parentComponent)
         }
         /**
          *  一个组件传入的props更新了， 更新组件；
@@ -234,7 +235,7 @@ export function createRenderer(options: createRendererOptions) {
      * @param vNode
      * @param container
      */
-    const mountedElement = (vNode, container, refer) => {
+    const mountedElement = (vNode, container, refer, parentComponent) => {
         const {type, props, children, shapeFlag} = vNode
         const mountedEl = vNode.el = hostCreateElement(type)
         hostInsert(mountedEl, container, refer)
@@ -247,7 +248,7 @@ export function createRenderer(options: createRendererOptions) {
             hostSetElementText(mountedEl, children)
         } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
             // 是一个数组,
-            mountedChildren(mountedEl, children)
+            mountedChildren(mountedEl, children, parentComponent)
         }
 
     }
@@ -278,12 +279,21 @@ export function createRenderer(options: createRendererOptions) {
      * @param el
      * @param children
      */
-    const mountedChildren = (el, children) => {
+    const mountedChildren = (el, children, parentComponent) => {
         // todo 这个里面应该要递归才对; 因为h函数里面可能数组套数组
+        // todo bug 比如下面这种 数组里面套数组就渲染不出来, 并且还要考虑到cloneVNode
+        /*
+        h('div', null,
+        '我是text1',
+        h('h1', '我是h1'),
+        h('h2', [ h('h3', '我是h2中的h3'), '我是h2中的text1', '  我是h2中的text2' ]),
+        '我是text2',
+        [ h('p', null, '我是p1', '我是p2'),'我是p标签同级text' ])
+         */
         normalize(children)
         // debugger
         children.forEach(child => {
-            patch(null, child, el, null)
+            patch(null, child, el, null, parentComponent)
         })
     }
 
@@ -301,7 +311,7 @@ export function createRenderer(options: createRendererOptions) {
     }
 
     // n1, n2 对应的真实dom是一样的
-    const patchElement = (vNode1, vNode2) => {
+    const patchElement = (vNode1, vNode2, parentComponent) => {
         const props1 = vNode1.props || {}
         const props2 = vNode2.props || {}
         // children的container
@@ -320,7 +330,7 @@ export function createRenderer(options: createRendererOptions) {
         }
 
         // 更新children
-        patchChildren(vNode1, vNode2, el)
+        patchChildren(vNode1, vNode2, el, parentComponent)
     }
 
 
@@ -341,7 +351,7 @@ export function createRenderer(options: createRendererOptions) {
     //  老: arr, 新: arr
     //  老: null, 新: arr
     //  老: text,null, 新: null
-    const patchChildren = (vNode1, vNode2, container) => {
+    const patchChildren = (vNode1, vNode2, container, parentComponent) => {
         if (!vNode1 || !vNode2) return
 
         const children1 = vNode1.children
@@ -363,14 +373,14 @@ export function createRenderer(options: createRendererOptions) {
             // 老的也是数组
             if (preShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                 // 全量diff算法
-                patchKeyedChildren(children1, children2, container)
+                patchKeyedChildren(children1, children2, container, parentComponent)
             } else {
                 // 老的是null或text
                 // 老的是text
                 if (preShapeFlag & ShapeFlags.TEXT_CHILDREN) {
                     hostSetElementText(container, null)
                 }
-                mountedChildren(container, children2)
+                mountedChildren(container, children2, parentComponent)
             }
         } else {
             // 新的是null
@@ -385,8 +395,8 @@ export function createRenderer(options: createRendererOptions) {
     }
 
 
-    const patchKeyedChildren = (children1, children2, container) => {
-        debugger
+    const patchKeyedChildren = (children1, children2, container, parentComponent) => {
+        // debugger
         let i = 0
         let e1 = children1.length - 1
         let e2 = children2.length - 1
@@ -400,7 +410,7 @@ export function createRenderer(options: createRendererOptions) {
             const c1 = children1[i]
             const c2 = children2[i]
             if (isSameVNode(c1, c2)) {
-                patch(c1, c2, container, null)
+                patch(c1, c2, container, null, parentComponent)
             } else {
                 break
             }
@@ -416,7 +426,7 @@ export function createRenderer(options: createRendererOptions) {
             const c1 = children1[e1]
             const c2 = children2[e2]
             if (isSameVNode(c1, c2)) {
-                patch(c1, c2, container, null)
+                patch(c1, c2, container, null, parentComponent)
             } else {
                 break
             }
@@ -437,7 +447,7 @@ export function createRenderer(options: createRendererOptions) {
                 const refer = children1[next]?.el
                 while (i <= e2) {
                     const node = children2[i]
-                    patch(null, node, container, refer)
+                    patch(null, node, container, refer, parentComponent)
                     i++
                 }
             }
@@ -494,7 +504,7 @@ export function createRenderer(options: createRendererOptions) {
 
                 // debugger
                 newIndexToOldMapIndex[newIndex - s2] = i + 1
-                patch(oldVNode, children2[newIndex], container, null)
+                patch(oldVNode, children2[newIndex], container, null, parentComponent)
             }
         }
         // debugger
@@ -514,7 +524,7 @@ export function createRenderer(options: createRendererOptions) {
 
             // 说明是老children中没有的,需要新增
             if (newIndexToOldMapIndex[i] === 0) {
-                patch(null, current, container, refer)
+                patch(null, current, container, refer, parentComponent)
             } else {
                 // 因为increasingSequence存的也是索引,(存的时候+1了)
                 // 说明当前节点可以不用动,直接跳过
@@ -602,11 +612,11 @@ export function createRenderer(options: createRendererOptions) {
         return result
     }
 
-    const mountComponent = (vnode, container, refer) => {
+    const mountComponent = (vnode, container, refer, parentComponent) => {
         // debugger
         // 1.创建组件实例
         // 组件实例挂到vnode上,方便后续patch
-        const instance = vnode.component = createComponentInstance(vnode)
+        const instance = vnode.component = createComponentInstance(vnode, parentComponent)
 
         // 2. instance设置属性
         setupComponentInstance(instance)
@@ -626,7 +636,7 @@ export function createRenderer(options: createRendererOptions) {
                 instance.subTree = subTree
                 instance.isMounted = true
                 console.log('mountedSubTree', subTree)
-                patch(null, subTree, container, refer)
+                patch(null, subTree, container, refer, instance)
             } else {
 
                 // 如果有, 说明进入到了processComponent的else分支
@@ -646,7 +656,7 @@ export function createRenderer(options: createRendererOptions) {
                 console.log('newSubTree', subTree)
 
                 // debugger
-                patch(preSubTree, subTree, container, refer)
+                patch(preSubTree, subTree, container, refer, instance)
                 instance.subTree = subTree
             }
         }

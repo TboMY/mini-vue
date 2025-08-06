@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+</body>
+</html>
+
+<script type="module">
+
+  // 官方的===========================
+  // import {
+  //   h,
+  //   render,
+  //   Fragment,
+  //   ref,
+  //   provide,
+  //   inject
+  // } from '../node_modules/vue/dist/vue.runtime.esm-browser.js'
+
+  import {
+    h,
+    render,
+    Fragment,
+    ref,
+    provide,
+    inject
+  } from '../../runtime-dom/dist/runtime-dom.js'
+
+  // 用官方的和自己的进行对比测试
+
+  const P1 = {
+    setup ( props ) {
+      const name = inject('name', '我是p1默认值')
+      return () => {
+        return h('h3', [ '我是孙子组件', h('div', name.value) ])
+      }
+    }
+  }
+
+  const P2 = {
+    setup ( props ) {
+      const age = inject('age', '我是p2默认值')
+      return () => {
+        return h('h2', [ '我是子组件', h('div', age.value), h(P1) ])
+      }
+    }
+  }
+
+  const P3 = {
+    setup ( props ) {
+      const name = ref('yyr')
+      const age = ref(18)
+
+      provide('name', name)
+      provide('age', age)
+
+      setInterval(() => {
+        name.value += age.value
+        age.value++
+      }, 1000)
+
+      return () => {
+        return h('h1', [ '我是父组件', h(P2) ])
+      }
+    }
+  }
+
+  // render(h(P3), document.body)
+  render.render(h(P3), document.body)
+
+
+</script>

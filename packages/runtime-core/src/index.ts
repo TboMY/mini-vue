@@ -7,6 +7,7 @@ export * from '@mini-vue/reactivity'
 export * from './render'
 export * from './h'
 export {createVNode} from "./vNode";
+export * from './apiProvide'
 
 
 
