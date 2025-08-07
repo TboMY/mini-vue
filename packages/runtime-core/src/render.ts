@@ -10,6 +10,7 @@ import {RuntimeFlags} from "packages/shared/src/constant";
 import {createComponentInstance, setupComponentInstance} from "./component";
 import {ReactivityEffect} from "@mini-vue/reactivity";
 import {queueJob} from "./schedule";
+import {executeLifeHook, invokeFnArray, LifeCycle} from "./apiLifeCycle";
 
 export interface createRendererOptions {
     insert: (el: Node, parent: Node, refer?: Node) => void;
@@ -54,7 +55,15 @@ export function createRenderer(options: createRendererOptions) {
 
         if (isNil(vNode)) {
             const preVNode = container._vnode
+
+            // 组件生命周期
+            // todo bug: 子组件的卸载钩子没办法执行
+            const instance = preVNode.component
+            executeLifeHook(instance, LifeCycle.BeforeUnmount)
+
             preVNode && unMount(preVNode)
+
+            executeLifeHook(instance, LifeCycle.Unmount)
             return
         }
 
@@ -170,6 +179,8 @@ export function createRenderer(options: createRendererOptions) {
         }
     }
 
+    // todo: bug
+    // 这个方法有问题, 如果通过provide和inject, 子组件在updateComponent方法中调用这个方法时, 得到的值不正确
     const shouldUpdateComponent = (preVNode, newVNode) => {
         const {props: preProps = {}, children: preChildren} = preVNode
         const {props: newProps = {}, children: newChildren} = newVNode
@@ -410,6 +421,7 @@ export function createRenderer(options: createRendererOptions) {
             const c1 = children1[i]
             const c2 = children2[i]
             if (isSameVNode(c1, c2)) {
+                // debugger
                 patch(c1, c2, container, null, parentComponent)
             } else {
                 break
@@ -628,16 +640,25 @@ export function createRenderer(options: createRendererOptions) {
 
     const setupRenderEffect = (instance, container, refer) => {
         const updateComponent = () => {
-            const {isMounted, proxy, subTree: preSubTree, render, next: nextVNode} = instance
+            const {isMounted, proxy, subTree: preSubTree, render, next: nextVNode, bm, m, bu, u} = instance
             // debugger
             if (!isMounted) {
+                // 生命周期
+                executeLifeHook(instance, LifeCycle.BeforeMounted)
+
                 // render可以传入一个形参(proxy), render里面可以用proxy.age或者this.age
                 const subTree = render.call(proxy, proxy)
                 instance.subTree = subTree
                 instance.isMounted = true
                 console.log('mountedSubTree', subTree)
                 patch(null, subTree, container, refer, instance)
+
+                executeLifeHook(instance, LifeCycle.Mounted)
             } else {
+
+                // debugger
+
+                executeLifeHook(instance, LifeCycle.BeforeUpdate)
 
                 // 如果有, 说明进入到了processComponent的else分支
                 if (nextVNode) {
@@ -658,6 +679,8 @@ export function createRenderer(options: createRendererOptions) {
                 // debugger
                 patch(preSubTree, subTree, container, refer, instance)
                 instance.subTree = subTree
+
+                executeLifeHook(instance, LifeCycle.Updated)
             }
         }
 
@@ -692,6 +715,7 @@ export function createRenderer(options: createRendererOptions) {
             }
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
             // 组件最外层是一个Fragment(或者一个root元素,比如div) 所以不用考虑是否为数组
+            // todo: 这里会造成子组件的onUnmounted,onBeforeUnmount生命周期钩子有问题
             unMount(vnode.component.subTree)
         } else {
             hostRemove(vnode.el)
