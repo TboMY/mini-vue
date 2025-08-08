@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+</body>
+</html>
+
+<script type="module">
+
+  // 官方的===========================
+  import {
+    h,
+    render,
+    Fragment,
+    ref,
+    provide,
+    inject,
+    onBeforeMount,
+    onBeforeUnmount,
+    onBeforeUpdate,
+    onMounted,
+    onUnmounted,
+    onUpdated,
+    getCurrentInstance
+  } from '../node_modules/vue/dist/vue.esm-browser.js'
+
+  // import {
+  //   h,
+  //   render,
+  //   Fragment,
+  //   ref,
+  //   provide,
+  //   inject,
+  //   onBeforeMount,
+  //   onBeforeUnmount,
+  //   onBeforeUpdate,
+  //   onMounted,
+  //   onUnmounted,
+  //   onUpdated,
+  //   getCurrentInstance
+  // } from '../../runtime-dom/dist/runtime-dom.js'
+
+  // 用官方的和自己的进行对比测试
+
+  // const P1 = {
+  //   setup ( props ) {
+  //     const name = inject('name', '我是p1默认值')
+  //     return () => {
+  //       return h('h3', [ '我是孙子组件', h('div', name.value) ])
+  //     }
+  //   }
+  // }
+
+  const P2 = {
+    setup ( props, { expose } ) {
+
+      expose({
+        aaa: 100
+      })
+
+      return () => h('h3', '我是子组件')
+    }
+  }
+
+  const P3 = {
+    setup ( props ) {
+      const myRef = ref(null)
+
+      onMounted(() => {
+        debugger
+        console.log('myref', myRef.value instanceof Proxy)
+      })
+
+      return () => {
+        // ref获取instance
+        // return h('h1', [ '我是父组件', h(P2, { ref: myRef }) ])
+
+        // ref获取dom
+        return h('h1', { ref: myRef }, '我是父组件')
+      }
+    }
+  }
+
+  render(h(P3), document.body)
+
+  // render.render(h(P3), document.body)
+
+
+</script>

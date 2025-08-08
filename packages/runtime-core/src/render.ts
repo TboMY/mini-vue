@@ -8,7 +8,7 @@ import {isArr, isNil, isObject, isString, ShapeFlags} from "@mini-vue/shared";
 import {createVNode, isSameVNode} from "./vNode";
 import {RuntimeFlags} from "packages/shared/src/constant";
 import {createComponentInstance, setupComponentInstance} from "./component";
-import {ReactivityEffect} from "@mini-vue/reactivity";
+import {isRef, ReactivityEffect} from "@mini-vue/reactivity";
 import {queueJob} from "./schedule";
 import {executeLifeHook, invokeFnArray, LifeCycle} from "./apiLifeCycle";
 
@@ -99,7 +99,8 @@ export function createRenderer(options: createRendererOptions) {
         // debugger
 
         // todo: patchKeyedChildren方法, 对于都没有key的情况(都是undefined),有问题
-        const {type, shapeFlag} = newVNode
+        const {type, shapeFlag, ref} = newVNode
+
         switch (type) {
             case RuntimeFlags.Text:
                 processText(preVNode, newVNode, container)
@@ -118,7 +119,24 @@ export function createRenderer(options: createRendererOptions) {
                 }
         }
 
+        setRef(ref, newVNode)
 
+    }
+
+    const setRef = (ref, vnode) => {
+        if (!ref || !isRef(ref) || !vnode) return
+
+        const {shapeFlag} = vnode
+        // 组件
+        if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+            // debugger
+            const instance = vnode.component
+            instance && (ref.value = instance.exposed ? instance.exposed : instance.proxy)
+        }
+        // dom
+        else if (shapeFlag & ShapeFlags.ELEMENT) {
+            ref.value = vnode.el
+        }
     }
 
     const processText = (preVNode, newVNode, container) => {

@@ -23,7 +23,8 @@ export const createVNode = (type?: string | symbol, props?: any, children?: any)
         el: null, // 这个vnode对应的真实dom
         key: props?.key,
         shapeFlag, // 这里的标识是标识children和当前vNode的类型(一起的, 通过|运算符之后得到的)
-        children: createChildren(children)
+        children: createChildren(children),
+        ref:props?.ref
     }
 
     return vNode
