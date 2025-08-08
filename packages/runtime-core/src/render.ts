@@ -179,8 +179,6 @@ export function createRenderer(options: createRendererOptions) {
         }
     }
 
-    // todo: bug
-    // 这个方法有问题, 如果通过provide和inject, 子组件在updateComponent方法中调用这个方法时, 得到的值不正确
     const shouldUpdateComponent = (preVNode, newVNode) => {
         const {props: preProps = {}, children: preChildren} = preVNode
         const {props: newProps = {}, children: newChildren} = newVNode

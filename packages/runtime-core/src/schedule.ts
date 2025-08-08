@@ -7,6 +7,9 @@
 const queue = []
 let isFlushing = false
 
+
+// todo: bug
+// 父组件和子组件的更新视为两次独立的更新了, 导致生命周期钩子执行顺序不对
 export function queueJob(job) {
     // debugger
     if (!queue.includes(job)) {
